@@ -57,8 +57,9 @@
       display: grid;
       grid-template-areas: "header header" "sidebar main";
       grid-template-columns: var(--sidebar-width) 1fr;
-      grid-template-rows: var(--header-height) calc(100vh - var(--header-height));
+      grid-template-rows: var(--header-height) 1fr;
       height: 100vh;
+      overflow: hidden;
     }
 
     header {
@@ -71,30 +72,60 @@
       padding: 0 20px;
       border-bottom: 1px solid var(--border-color);
       background: var(--bg-color);
-      z-index: 100;
+      z-index: 1000;
+    }
+
+    #menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 0;
+      margin-right: 15px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
     }
 
     header h1 {
       font-size: 1.1rem;
       margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     header input {
       width: 260px;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       background: var(--bg-secondary);
       color: var(--text-primary);
+      transition: width 0.3s;
     }
 
-    header button {
+    header button#theme {
       border: 1px solid var(--border-color);
       background: var(--bg-secondary);
       border-radius: 6px;
       padding: 6px 10px;
       cursor: pointer;
       color: var(--text-primary);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     nav {
@@ -103,6 +134,8 @@
       border-right: 1px solid var(--border-color);
       overflow-y: auto;
       padding: 20px 0;
+      transition: transform 0.3s ease;
+      z-index: 900;
     }
 
     nav h2 {
@@ -115,10 +148,11 @@
 
     nav a {
       display: block;
-      padding: 6px 20px;
+      padding: 8px 20px;
       color: var(--text-primary);
       text-decoration: none;
       font-size: 0.95rem;
+      transition: background 0.2s;
     }
 
     nav a:hover {
@@ -130,6 +164,7 @@
       grid-area: main;
       overflow-y: auto;
       padding: 40px 60px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .content {
@@ -211,29 +246,95 @@
       display: none !important;
     }
 
+    #backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 850;
+      backdrop-filter: blur(2px);
+    }
+
     @media (max-width: 768px) {
       .app {
         grid-template-areas: "header" "main";
         grid-template-columns: 1fr;
       }
 
+      #menu-toggle {
+        display: block;
+      }
+
+      header {
+        padding: 0 15px;
+      }
+
+      header input {
+        width: 40px;
+        padding: 8px;
+        cursor: pointer;
+      }
+
+      header input:focus {
+        position: absolute;
+        left: 15px;
+        right: 15px;
+        width: calc(100% - 30px);
+        z-index: 1100;
+      }
+
       nav {
-        display: none;
+        position: fixed;
+        left: 0;
+        top: var(--header-height);
+        bottom: 0;
+        width: var(--sidebar-width);
+        transform: translateX(-100%);
+        border-right: 1px solid var(--border-color);
+      }
+
+      .sidebar-open nav {
+        transform: translateX(0);
+      }
+
+      .sidebar-open #backdrop {
+        display: block;
       }
 
       main {
-        padding: 20px;
+        padding: 20px 15px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      .content {
+        padding-bottom: 40px;
       }
     }
   </style>
 </head>
 
 <body>
+  <div id="backdrop"></div>
   <div class="app">
     <header>
-      <h1>Unit Testing — Java & Spring Boot</h1>
-      <input id="search" placeholder="Search notes…">
-      <button id="theme">◑</button>
+      <div class="header-left">
+        <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
+        <h1>Unit Testing — Java & Spring Boot</h1>
+      </div>
+      <div class="header-actions">
+        <input id="search" placeholder="Search notes…" aria-label="Search">
+        <button id="theme" title="Toggle Theme">◑</button>
+      </div>
     </header>
 
     <nav>
@@ -2862,13 +2963,36 @@ testCase1()</code></pre>
     const search = document.getElementById('search');
     const sections = document.querySelectorAll('section');
     const themeBtn = document.getElementById('theme');
+    const menuToggle = document.getElementById('menu-toggle');
+    const backdrop = document.getElementById('backdrop');
+    const navLinks = document.querySelectorAll('nav a');
     const html = document.documentElement;
+    const body = document.body;
 
+    // Theme Toggle
     themeBtn.onclick = () => {
       const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
       html.setAttribute('data-theme', t);
     };
 
+    // Sidebar Toggle
+    const toggleSidebar = () => {
+      body.classList.toggle('sidebar-open');
+    };
+
+    menuToggle.onclick = toggleSidebar;
+    backdrop.onclick = toggleSidebar;
+
+    // Close sidebar when clicking a link (mobile)
+    navLinks.forEach(link => {
+      link.onclick = () => {
+        if (window.innerWidth <= 768) {
+          body.classList.remove('sidebar-open');
+        }
+      };
+    });
+
+    // Search Filtering
     search.oninput = () => {
       const q = search.value.toLowerCase();
       sections.forEach(s => {
