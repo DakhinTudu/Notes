@@ -176,6 +176,38 @@
       color: var(--accent-color);
     }
 
+    .nav-footer {
+      padding: 20px;
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .download-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+
+    .download-btn:hover {
+      opacity: 0.9;
+    }
+
+    .download-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
     main {
       grid-area: main;
       overflow-y: auto;
@@ -213,6 +245,70 @@
       padding: 16px;
       border-radius: 6px;
       overflow-x: auto;
+    }
+
+    /* PDF Export Override Styles */
+    .pdf-export-mode {
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    .pdf-export-mode .app {
+      display: block !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    .pdf-export-mode main {
+      display: block !important;
+      height: auto !important;
+      overflow: visible !important;
+      padding: 0 !important;
+    }
+
+    .pdf-export-mode #content {
+      background-color: #ffffff !important;
+      color: #1a1a1a !important;
+      padding: 40px !important;
+      max-width: none !important;
+      width: 100% !important;
+    }
+
+    .pdf-export-mode .callout,
+    .pdf-export-mode pre,
+    .pdf-export-mode details,
+    .pdf-export-mode summary {
+      background-color: #f8f9fa !important;
+      color: #1a1a1a !important;
+      border-color: #dee2e6 !important;
+    }
+
+    .pdf-export-mode .note {
+      background-color: #e3f2fd !important;
+      border-left-color: #2196f3 !important;
+    }
+
+    .pdf-export-mode .warning {
+      background-color: #fff3e0 !important;
+      border-left-color: #ff9800 !important;
+    }
+
+    .pdf-export-mode code {
+      color: #d73a49 !important;
+      background: none !important;
+    }
+
+    .pdf-export-mode h1,
+    .pdf-export-mode h2,
+    .pdf-export-mode h3,
+    .pdf-export-mode h4 {
+      color: #0366d6 !important;
+    }
+
+    .pdf-export-mode nav,
+    .pdf-export-mode header,
+    .pdf-export-mode #backdrop {
+      display: none !important;
     }
 
     code {
@@ -415,6 +511,17 @@
       <a href="#m10">Module 10</a>
       <a href="#m11">Module 11</a>
       <a href="#m12">Module 12</a>
+      <div class="nav-footer">
+        <button id="download-pdf" class="download-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download PDF
+        </button>
+      </div>
     </nav>
 
     <main>
@@ -3018,6 +3125,7 @@ testCase1()</code></pre>
     </main>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script>
     const search = document.getElementById('search');
     const sections = document.querySelectorAll('section');
@@ -3025,6 +3133,7 @@ testCase1()</code></pre>
     const menuToggle = document.getElementById('menu-toggle');
     const backdrop = document.getElementById('backdrop');
     const navLinks = document.querySelectorAll('nav a');
+    const downloadBtn = document.getElementById('download-pdf');
     const html = document.documentElement;
     const body = document.body;
 
@@ -3057,6 +3166,99 @@ testCase1()</code></pre>
       sections.forEach(s => {
         s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
       });
+    };
+
+    // PDF Export
+    downloadBtn.onclick = () => {
+      const element = document.getElementById('content');
+      const allDetails = document.querySelectorAll('details');
+      const originalDetailsState = Array.from(allDetails).map(d => d.open);
+
+      // Force all sections to be visible
+      sections.forEach(s => s.classList.remove('hidden'));
+
+      // Force all details to be open
+      allDetails.forEach(d => d.open = true);
+
+      // Force PDF modes
+      document.body.classList.add('pdf-export-mode');
+
+      const opt = {
+        margin: [15, 15, 25, 15],
+        filename: 'JUnit-Mockito-Notes-Daxin.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 1.5, // Slightly lower scale for stability with huge content
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          windowHeight: element.scrollHeight
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      // Show loading state
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = 'Generating...';
+      downloadBtn.disabled = true;
+
+      // Small delay to ensure CSS and details-open state are applied
+      setTimeout(() => {
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+          const totalPages = pdf.internal.getNumberOfPages();
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+
+          for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+
+            // Header
+            pdf.setFontSize(9);
+            pdf.setTextColor(150);
+            pdf.text('Daxin.dev Notes', pageWidth / 2, 10, { align: 'center' });
+
+            // Footer Line
+            pdf.setDrawColor(200);
+            pdf.setLineWidth(0.1);
+            pdf.line(15, pageHeight - 18, pageWidth - 15, pageHeight - 18);
+
+            // Footer Content
+            pdf.setFontSize(8);
+            pdf.setTextColor(80);
+
+            const email = 'Email: dtudu195@gmail.com';
+            const portfolio = 'Portfolio: portfolio-daxin.netlify.app';
+            const github = 'GitHub: github.com/DakhinTudu';
+            const linkedin = 'LinkedIn: linkedin.com/in/dakhin-tudu-b3550821b/';
+
+            pdf.text(`${email}  |  ${portfolio}`, pageWidth / 2, pageHeight - 13, { align: 'center' });
+            pdf.text(`${github}  |  ${linkedin}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+            // Page Number
+            pdf.setFontSize(7);
+            pdf.text(`Page ${i} of ${totalPages}`, pageWidth - 15, pageHeight - 4, { align: 'right' });
+          }
+        }).save().then(() => {
+          downloadBtn.innerHTML = originalText;
+          downloadBtn.disabled = false;
+          document.body.classList.remove('pdf-export-mode');
+          // Restore details state
+          allDetails.forEach((d, i) => d.open = originalDetailsState[i]);
+          // Re-apply search if exists
+          if (search.value) search.oninput();
+        }).catch(err => {
+          console.error(err);
+          downloadBtn.innerHTML = 'Error!';
+          document.body.classList.remove('pdf-export-mode');
+          allDetails.forEach((d, i) => d.open = originalDetailsState[i]);
+          setTimeout(() => {
+            downloadBtn.innerHTML = originalText;
+            downloadBtn.disabled = false;
+          }, 2000);
+        });
+      }, 800);
     };
   </script>
 </body>
