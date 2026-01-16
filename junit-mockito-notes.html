@@ -1,0 +1,2881 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Testing Notes — Java & Spring Boot</title>
+
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --border-color: #dee2e6;
+      --accent-color: #0366d6;
+      --code-bg: #f6f8fa;
+      --code-text: #24292e;
+      --note-bg: #e1f5fe;
+      --note-border: #0288d1;
+      --warning-bg: #fff3e0;
+      --warning-border: #ff9800;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      --mono-font: "SFMono-Regular", Consolas, Menlo, monospace;
+      --header-height: 60px;
+      --sidebar-width: 280px;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0d1117;
+      --bg-secondary: #161b22;
+      --text-primary: #c9d1d9;
+      --text-secondary: #8b949e;
+      --border-color: #30363d;
+      --accent-color: #58a6ff;
+      --code-bg: #161b22;
+      --code-text: #e6edf3;
+      --note-bg: #1f3745;
+      --note-border: #58a6ff;
+      --warning-bg: #3d3018;
+      --warning-border: #d29922;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .app {
+      display: grid;
+      grid-template-areas: "header header" "sidebar main";
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: var(--header-height) calc(100vh - var(--header-height));
+      height: 100vh;
+    }
+
+    header {
+      grid-area: header;
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-color);
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    header input {
+      width: 260px;
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    header button {
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    nav {
+      grid-area: sidebar;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+
+    nav h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      padding: 0 20px;
+      margin: 16px 0 6px;
+    }
+
+    nav a {
+      display: block;
+      padding: 6px 20px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover {
+      background: var(--bg-color);
+      color: var(--accent-color);
+    }
+
+    main {
+      grid-area: main;
+      overflow-y: auto;
+      padding: 40px 60px;
+    }
+
+    .content {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.4rem;
+      margin-top: 0;
+    }
+
+    h2 {
+      font-size: 1.7rem;
+      margin-top: 3rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: var(--mono-font);
+      color: var(--code-text);
+      font-size: 0.9em;
+    }
+
+    .callout {
+      padding: 16px;
+      border-left: 4px solid;
+      border-radius: 6px;
+      margin: 20px 0;
+    }
+
+    .note {
+      background: var(--note-bg);
+      border-color: var(--note-border);
+    }
+
+    .warning {
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    details {
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin: 16px 0;
+    }
+
+    summary {
+      padding: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--bg-secondary);
+    }
+
+    .details-body {
+      padding: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        grid-template-areas: "header" "main";
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        display: none;
+      }
+
+      main {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <header>
+      <h1>Unit Testing — Java & Spring Boot</h1>
+      <input id="search" placeholder="Search notes…">
+      <button id="theme">◑</button>
+    </header>
+
+    <nav>
+      <h2>Foundations</h2>
+      <a href="#m0">Module 0</a>
+      <h2>JUnit</h2>
+      <a href="#m1">Module 1</a>
+      <h2>Mockito</h2>
+      <a href="#m2">Module 2</a>
+      <a href="#m3">Module 3</a>
+      <h2>Spring</h2>
+      <a href="#m4">Module 4</a>
+      <a href="#m5">Module 5</a>
+      <a href="#m6">Module 6</a>
+      <a href="#m7">Module 7</a>
+      <a href="#m8">Module 8</a>
+      <h2>Advanced</h2>
+      <a href="#m9">Module 9</a>
+      <a href="#m10">Module 10</a>
+      <a href="#m11">Module 11</a>
+      <a href="#m12">Module 12</a>
+    </nav>
+
+    <main>
+      <div class="content" id="content">
+
+        <section id="m0">
+          <h1>MODULE 0 — Foundations (Must know before writing tests)</h1>
+
+          <h2>0.1 Why Unit Testing Exists (Engineering View)</h2>
+
+          <h3>1. Cost of Bugs vs Cost of Tests</h3>
+
+          <div class="callout note">
+            <strong>Key idea</strong>
+            Testing is not about perfection — it is about risk reduction at the lowest cost.
+          </div>
+
+          <details>
+            <summary>Cost curve of bugs</summary>
+            <div class="details-body">
+              <ul>
+                <li><strong>Bug caught in development</strong> → very cheap</li>
+                <li><strong>Bug caught in QA</strong> → more expensive</li>
+                <li><strong>Bug caught in production</strong> → extremely expensive
+                  <ul>
+                    <li>Hotfixes</li>
+                    <li>Rollbacks</li>
+                    <li>Data corruption</li>
+                    <li>Customer trust loss</li>
+                    <li>Legal / compliance issues (in some domains)</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </details>
+
+          <h4>Unit tests are cheap insurance</h4>
+          <ul>
+            <li>Written once, run thousands of times</li>
+            <li>Catch regressions automatically</li>
+            <li>Reduce fear of refactoring</li>
+          </ul>
+
+          <h4>Engineering trade-off</h4>
+          <ul>
+            <li>Not everything deserves a unit test</li>
+            <li>Write tests where:
+              <ul>
+                <li>Logic is non-trivial</li>
+                <li>Bugs are costly</li>
+                <li>Code is expected to change</li>
+              </ul>
+            </li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Rule of thumb</strong>
+            Test logic, not plumbing.
+          </div>
+
+          <h3>2. Test Pyramid</h3>
+          <p>A mental model to balance speed, reliability, and coverage.</p>
+
+          <pre><code>        UI / E2E Tests (Few)
+      -----------------------
+     Integration Tests (Some)
+   ---------------------------
+  Unit Tests (Many)</code></pre>
+
+          <details>
+            <summary>Unit Tests</summary>
+            <div class="details-body">
+              <ul>
+                <li>Fast (milliseconds)</li>
+                <li>Isolated</li>
+                <li>Deterministic</li>
+                <li>Cheap to maintain</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Integration Tests</summary>
+            <div class="details-body">
+              <ul>
+                <li>Slower</li>
+                <li>Test interaction between components</li>
+                <li>More realistic failures</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>UI / E2E Tests</summary>
+            <div class="details-body">
+              <ul>
+                <li>Slow</li>
+                <li>Flaky</li>
+                <li>Expensive to maintain</li>
+                <li>Validate critical user flows only</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout warning">
+            <strong>Common mistake</strong>
+            Writing too many UI tests and too few unit tests → slow pipelines, flaky builds, low confidence
+          </div>
+
+          <h3>3. Deterministic vs Non-Deterministic Tests</h3>
+
+          <h4>Deterministic Tests (Good)</h4>
+          <ul>
+            <li>Same input → same output → every run</li>
+            <li>Independent of:
+              <ul>
+                <li>Time</li>
+                <li>Network</li>
+                <li>Random values</li>
+                <li>External systems</li>
+              </ul>
+            </li>
+          </ul>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>assertEquals(4, calculator.add(2, 2));</code></pre>
+
+          <h4>Non-Deterministic Tests (Bad)</h4>
+          <ul>
+            <li>Fail randomly</li>
+            <li>Cause:
+              <ul>
+                <li><code>LocalDateTime.now()</code></li>
+                <li>Random UUIDs</li>
+                <li>Threads / async timing</li>
+                <li>Network / DB dependencies</li>
+              </ul>
+            </li>
+          </ul>
+
+          <p><strong>Example (bad):</strong></p>
+          <pre><code>assertTrue(service.getToken().length() > 0);</code></pre>
+
+          <div class="callout note">
+            <strong>Engineering principle</strong>
+            If a test sometimes fails without code change → test is broken, not the code
+          </div>
+
+          <h4>Solution</h4>
+          <ul>
+            <li>Mock time</li>
+            <li>Mock randomness</li>
+            <li>Mock external dependencies</li>
+          </ul>
+
+          <h3>4. What NOT to Unit Test</h3>
+          <p>Unit tests are not free — avoid wasting effort.</p>
+
+          <h4>❌ Do NOT unit test:</h4>
+          <ul>
+            <li>Framework code (Spring, Hibernate, JDK)</li>
+            <li>Getters/setters</li>
+            <li>Simple DTOs</li>
+            <li>Configuration wiring</li>
+            <li>Logging</li>
+            <li>Third-party libraries</li>
+          </ul>
+
+          <h4>❌ Avoid testing:</h4>
+          <pre><code>user.setName("A");
+assertEquals("A", user.getName());</code></pre>
+
+          <h4>✅ DO unit test:</h4>
+          <ul>
+            <li>Business rules</li>
+            <li>Conditional logic</li>
+            <li>Calculations</li>
+            <li>Transformations</li>
+            <li>Error handling paths</li>
+            <li>Boundary cases</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            If removing a test does not reduce confidence → that test is useless.
+          </div>
+
+          <h2>0.2 Types of Tests</h2>
+
+          <h3>1. Unit Tests</h3>
+
+          <h4>Definition</h4>
+          <ul>
+            <li>Test a single class or method in isolation</li>
+            <li>Dependencies are mocked or stubbed</li>
+          </ul>
+
+          <h4>Characteristics</h4>
+          <ul>
+            <li>Fast</li>
+            <li>No Spring context (ideally)</li>
+            <li>No DB</li>
+            <li>No network</li>
+            <li>No file system</li>
+          </ul>
+
+          <h4>Example</h4>
+          <ul>
+            <li>Service logic</li>
+            <li>Utility classes</li>
+            <li>Validators</li>
+            <li>Mappers</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Goal</strong>
+            Verify behavior, not implementation
+          </div>
+
+          <h3>2. Integration Tests</h3>
+
+          <h4>Definition</h4>
+          <p>Test how multiple components work together</p>
+
+          <h4>Examples</h4>
+          <ul>
+            <li>Service + Repository + DB</li>
+            <li>Controller + Service + Serialization</li>
+            <li>JPA mappings</li>
+            <li>SQL correctness</li>
+          </ul>
+
+          <h4>Characteristics</h4>
+          <ul>
+            <li>Slower than unit tests</li>
+            <li>More realistic</li>
+            <li>Fewer in number</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Engineering rule</strong>
+            Use integration tests to catch:
+            <ul>
+              <li>Wrong wiring</li>
+              <li>Incorrect queries</li>
+              <li>Serialization issues</li>
+              <li>Transaction boundaries</li>
+            </ul>
+          </div>
+
+          <h3>3. Slice Tests (Framework-assisted)</h3>
+          <p>Used mainly in Spring Boot.</p>
+
+          <h4>Purpose</h4>
+          <p>Test a slice of the application without loading everything</p>
+
+          <h4>Common slices</h4>
+          <ul>
+            <li><code>@WebMvcTest</code> → Controller layer</li>
+            <li><code>@DataJpaTest</code> → Repository layer</li>
+            <li><code>@JsonTest</code> → Serialization</li>
+          </ul>
+
+          <h4>Why slice tests exist</h4>
+          <ul>
+            <li>Faster than full integration tests</li>
+            <li>More realistic than pure unit tests</li>
+          </ul>
+
+          <h4>Example</h4>
+          <p>Testing controller request/response without starting full app</p>
+
+          <h3>4. Contract Tests (High-Level Awareness)</h3>
+
+          <h4>What they solve</h4>
+          <p>When two services communicate, who ensures compatibility?</p>
+
+          <h4>Idea</h4>
+          <ul>
+            <li>Consumer defines expectations</li>
+            <li>Provider guarantees them</li>
+          </ul>
+
+          <h4>Example</h4>
+          <ul>
+            <li>REST API request/response structure</li>
+            <li>Field names, types, constraints</li>
+          </ul>
+
+          <h4>Why important</h4>
+          <ul>
+            <li>Prevents breaking changes</li>
+            <li>Critical in microservices</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Not usually written at beginner level. Awareness is enough for now.
+          </div>
+
+        </section>
+
+        <section id="m1">
+          <h1>MODULE 1 — JUnit 5 Core (Absolute Basics)</h1>
+
+          <h2>1.1 JUnit 5 Architecture</h2>
+
+          <h3>JUnit 5 = Platform + Engines</h3>
+          <p>JUnit 5 is a modular testing platform, not a single JAR. This separation allows multiple test engines to
+            coexist and lets tools (IDE, Maven, Gradle) remain independent of test implementation details.</p>
+
+          <h3>Core Components</h3>
+
+          <details>
+            <summary>1. JUnit Platform</summary>
+            <div class="details-body">
+              <ul>
+                <li>Discovers tests</li>
+                <li>Executes tests</li>
+                <li>Integrates with build tools and IDEs</li>
+              </ul>
+              <p>Think of it as the runtime backbone — it does not define test annotations itself.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>2. JUnit Jupiter</summary>
+            <div class="details-body">
+              <ul>
+                <li>Modern test programming model</li>
+                <li>New annotations and lifecycle callbacks</li>
+                <li>Extension mechanism (Mockito, Spring Test, etc.)</li>
+              </ul>
+              <p>This is where all new tests should be written.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>3. JUnit Vintage</summary>
+            <div class="details-body">
+              <ul>
+                <li>Supports JUnit 3 & 4</li>
+                <li>Exists only to help legacy codebases migrate gradually</li>
+              </ul>
+            </div>
+          </details>
+
+          <h4>Architecture Diagram</h4>
+          <pre><code>IDE / Build Tool
+        ↓
+   JUnit Platform
+     ↓         ↓
+ Jupiter     Vintage</code></pre>
+
+          <h4>Jupiter vs Vintage</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Aspect</th>
+                <th>Jupiter</th>
+                <th>Vintage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Purpose</td>
+                <td>Modern tests</td>
+                <td>Legacy support</td>
+              </tr>
+              <tr>
+                <td>Lifecycle</td>
+                <td>Flexible</td>
+                <td>Limited</td>
+              </tr>
+              <tr>
+                <td>Extensions</td>
+                <td>Yes</td>
+                <td>No</td>
+              </tr>
+              <tr>
+                <td>Usage</td>
+                <td>Default choice</td>
+                <td>Migration only</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout note">
+            <strong>Engineering note</strong>
+            Keeping Vintage long-term increases maintenance cost and hides outdated testing practices.
+          </div>
+
+          <h3>Why JUnit 4 Is Obsolete</h3>
+
+          <details>
+            <summary>JUnit 4 limitations</summary>
+            <div class="details-body">
+              <ul>
+                <li>Rigid lifecycle (<code>@Before</code>, <code>@After</code>)</li>
+                <li>No extension system</li>
+                <li>Heavy reliance on static constructs</li>
+                <li>Poor support for parameterized tests</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>JUnit 5 improvements</summary>
+            <div class="details-body">
+              <ul>
+                <li>Clean lifecycle separation</li>
+                <li>Powerful extension API</li>
+                <li>Better readability and flexibility</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            JUnit 4 is not "broken", but it cannot support modern testing patterns cleanly, especially in Spring-based
+            systems.
+          </div>
+
+          <h2>1.2 Writing Tests</h2>
+
+          <h3>@Test</h3>
+          <p>Marks a method as a test case.</p>
+
+          <pre><code>@Test
+void shouldAddTwoNumbers() {
+    int sum = calculator.add(2, 3);
+    assertEquals(5, sum);
+}</code></pre>
+
+          <p>JUnit 5 allows:</p>
+          <ul>
+            <li>Package-private methods</li>
+            <li>No <code>throws Exception</code> unless required</li>
+          </ul>
+          <p>This keeps tests clean and intention-focused.</p>
+
+          <h3>Test Naming Conventions</h3>
+          <p>Good test names express expected behavior, not method names.</p>
+
+          <h4>Recommended styles</h4>
+
+          <details>
+            <summary>should_when</summary>
+            <div class="details-body">
+              <pre><code>shouldThrowExceptionWhenInputIsNegative()</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>given_when_then</summary>
+            <div class="details-body">
+              <pre><code>givenEmptyList_whenCalculateSum_thenReturnZero()</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>Plain English</summary>
+            <div class="details-body">
+              <pre><code>returnsZeroForEmptyInput()</code></pre>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            A good name reduces the need for comments and makes failures self-explanatory.
+          </div>
+
+          <h3>Arrange–Act–Assert (AAA)</h3>
+          <p>Logical structure for every test.</p>
+
+          <pre><code>@Test
+void shouldThrowExceptionForNegativeInput() {
+    // Arrange
+    Calculator calculator = new Calculator();
+
+    // Act + Assert
+    assertThrows(IllegalArgumentException.class,
+        () -> calculator.sqrt(-1));
+}</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            AAA makes tests easier to read, debug, and refactor. If Arrange or Act is hard to identify, the test is
+            likely doing too much.
+          </div>
+
+          <p><strong>Complete AAA Example:</strong></p>
+          <pre><code>@Test
+void shouldCalculateTotalPrice() {
+    // Arrange
+    OrderService service = new OrderService();
+    
+    // Act
+    int total = service.calculate(2, 100);
+    
+    // Assert
+    assertEquals(200, total);
+}</code></pre>
+
+          <h2>1.3 Assertions</h2>
+
+          <h3>Core JUnit Assertions</h3>
+
+          <details>
+            <summary>assertEquals</summary>
+            <div class="details-body">
+              <pre><code>assertEquals(5, result);</code></pre>
+              <p>Compares expected vs actual values. Always pass expected first for clearer failure messages.</p>
+              <div class="callout note">
+                <strong>Best Practice</strong>
+                Always include a descriptive message as the third parameter:<br>
+                <code>assertEquals(5, result, "Total should be 5 for 2+3")</code><br>
+                This makes test failures immediately understandable without debugging.
+              </div>
+            </div>
+          </details>
+
+          <details>
+            <summary>assertTrue / assertFalse</summary>
+            <div class="details-body">
+              <pre><code>assertTrue(list.isEmpty());</code></pre>
+              <p>Use only when no better assertion exists; they are less expressive.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>assertThrows</summary>
+            <div class="details-body">
+              <pre><code>assertThrows(IllegalStateException.class,
+    () -> service.process());</code></pre>
+              <p>Ensures the correct exception type is thrown, which is critical for validating error paths.</p>
+            </div>
+          </details>
+
+          <h3>AssertJ (assertThat)</h3>
+          <p>AssertJ provides fluent, readable assertions and far better diagnostics.</p>
+
+          <pre><code>assertThat(result).isEqualTo(5);
+assertThat(list).isEmpty();
+assertThat(user.getAge()).isGreaterThan(18);</code></pre>
+
+          <h4>Exception assertions</h4>
+          <pre><code>assertThatThrownBy(() -> service.process())
+    .isInstanceOf(IllegalStateException.class)
+    .hasMessageContaining("invalid");</code></pre>
+
+          <div class="callout note">
+            <strong>Engineering preference</strong>
+            Use AssertJ for anything beyond trivial checks.
+          </div>
+
+          <h4>JUnit vs AssertJ Comparison</h4>
+          <pre><code>// JUnit
+assertEquals(5, result);
+
+// AssertJ
+assertThat(result).isEqualTo(5).isPositive();</code></pre>
+
+          <h3>Comparing Objects vs Values</h3>
+
+          <h4>Value comparison</h4>
+          <pre><code>assertEquals(10, total);</code></pre>
+
+          <h4>Object comparison</h4>
+          <pre><code>assertEquals(expectedUser, actualUser);</code></pre>
+          <p>This requires a correct <code>equals()</code> implementation. Without it, comparisons may pass or fail
+            incorrectly.</p>
+
+          <h4>Alternative without equals()</h4>
+          <pre><code>assertThat(actualUser)
+    .usingRecursiveComparison()
+    .isEqualTo(expectedUser);</code></pre>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Avoid comparing entire objects when only specific fields matter.
+          </div>
+
+          <h2>1.4 Test Lifecycle</h2>
+
+          <h3>@BeforeEach</h3>
+          <p>Runs before every test method.</p>
+
+          <pre><code>@BeforeEach
+void setup() {
+    calculator = new Calculator();
+}</code></pre>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@BeforeEach
+void setUp() {
+    service = new OrderService();
+}</code></pre>
+
+          <p>Use it to ensure fresh state and test isolation.</p>
+
+          <h3>@AfterEach</h3>
+          <p>Runs after every test.</p>
+
+          <pre><code>@AfterEach
+void cleanup() {
+    calculator.reset();
+}</code></pre>
+
+          <p>Primarily used for resource cleanup; overuse often signals poor test design.</p>
+
+          <h3>@BeforeAll</h3>
+          <p>Runs once before all tests.</p>
+
+          <pre><code>@BeforeAll
+static void init() {
+    startServer();
+}</code></pre>
+
+          <div class="callout note">
+            <strong>Execution Order</strong>
+            The complete test lifecycle executes in this order:<br>
+            1. @BeforeAll (once)<br>
+            2. @BeforeEach → @Test → @AfterEach (for each test)<br>
+            3. @AfterAll (once)
+          </div>
+
+          <h4>When NOT to use @BeforeAll</h4>
+          <ul>
+            <li>When tests mutate shared state</li>
+            <li>When running tests in parallel</li>
+            <li>When order matters</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Shared setup often leads to flaky tests and hidden dependencies.
+          </div>
+
+        </section>
+
+        <section id="m2">
+          <h1>MODULE 2 — Mockito Fundamentals (Core Backend Skill)</h1>
+
+          <h2>2.1 Why Mocking Is Required</h2>
+
+          <h3>Isolation</h3>
+          <p>Unit tests must verify only the behavior of the class under test. Mocking removes dependencies (DB, REST
+            clients, other services) so failures clearly point to business logic, not infrastructure.</p>
+
+          <h4>Without isolation:</h4>
+          <ul>
+            <li>Tests become slow</li>
+            <li>Failures become ambiguous</li>
+            <li>Refactoring becomes risky</li>
+          </ul>
+
+          <h3>External Dependency Control</h3>
+          <p>Mocks give full control over dependency behavior:</p>
+          <ul>
+            <li>Force edge cases</li>
+            <li>Simulate failures</li>
+            <li>Test error-handling paths reliably</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Real dependencies are unpredictable; mocks are deterministic. Determinism is mandatory for trustworthy unit
+            tests.
+          </div>
+
+          <h2>2.2 Creating Mocks</h2>
+
+          <h3>@Mock</h3>
+          <p>Creates a fake implementation of a dependency.</p>
+
+          <pre><code>@Mock
+UserRepository userRepository;</code></pre>
+
+          <ul>
+            <li>No real logic executes</li>
+            <li>All methods return defaults unless stubbed</li>
+            <li>Use <code>@ExtendWith(MockitoExtension.class)</code> to activate Mockito</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Common Mistake</strong>
+            Forgetting <code>@ExtendWith(MockitoExtension.class)</code> at the class level results in
+            NullPointerException because mocks are never initialized. Alternative: use
+            <code>MockitoAnnotations.openMocks(this)</code> in @BeforeEach.
+          </div>
+
+          <h3>@InjectMocks</h3>
+          <p>Creates the class under test and injects mocks into it.</p>
+
+          <pre><code>@InjectMocks
+UserService userService;</code></pre>
+
+          <p>Mockito injects mocks by:</p>
+          <ul>
+            <li>Constructor</li>
+            <li>Setter</li>
+            <li>Field (last resort)</li>
+          </ul>
+          <p>This mirrors how DI containers behave.</p>
+
+          <h3>Constructor Injection vs Field Injection</h3>
+
+          <details>
+            <summary>Constructor Injection (Preferred)</summary>
+            <div class="details-body">
+              <pre><code>public UserService(UserRepository repo) {
+    this.repo = repo;
+}</code></pre>
+              <h4>Advantages:</h4>
+              <ul>
+                <li>Clear dependencies</li>
+                <li>Easier to test</li>
+                <li>Immutable design</li>
+                <li>Works cleanly with Mockito and Spring</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Field Injection (Avoid)</summary>
+            <div class="details-body">
+              <pre><code>@Autowired
+private UserRepository repo;</code></pre>
+              <h4>Problems:</h4>
+              <ul>
+                <li>Hidden dependencies</li>
+                <li>Harder to test</li>
+                <li>Breaks immutability</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Mockito favors constructor injection — so should your code.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@Mock
+UserRepository repo;
+
+@InjectMocks
+UserService service;</code></pre>
+
+          <h2>2.3 Stubbing Behavior</h2>
+
+          <h3>when().thenReturn()</h3>
+          <p>Defines expected behavior.</p>
+
+          <pre><code>when(userRepository.findById(1L))
+    .thenReturn(Optional.of(user));</code></pre>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>when(repo.findById(1L))
+    .thenReturn(Optional.of(user));</code></pre>
+
+          <p>Used to:</p>
+          <ul>
+            <li>Control execution path</li>
+            <li>Avoid real calls</li>
+            <li>Test specific scenarios</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Return Type Matching</strong>
+            The stubbed return type must match the method signature:<br>
+            • <code>Optional&lt;User&gt;</code> for <code>findById()</code><br>
+            • <code>List&lt;User&gt;</code> for <code>findAll()</code><br>
+            • <code>User</code> for <code>save()</code><br>
+            Mismatched types cause ClassCastException at runtime.
+          </div>
+
+          <h3>thenThrow()</h3>
+          <p>Simulates failure scenarios.</p>
+
+          <pre><code>when(userRepository.save(any()))
+    .thenThrow(new DataIntegrityViolationException("error"));</code></pre>
+
+          <p>Critical for testing:</p>
+          <ul>
+            <li>Error handling</li>
+            <li>Retry logic</li>
+            <li>Transaction boundaries</li>
+          </ul>
+
+          <h3>Default Mockito Behavior</h3>
+          <p>If not stubbed:</p>
+          <ul>
+            <li>Objects → <code>null</code></li>
+            <li>Primitives → <code>0</code>, <code>false</code></li>
+            <li>Collections → empty (sometimes null)</li>
+            <li>Methods do nothing</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            This prevents accidental side effects but can hide missing stubs if not careful.
+          </div>
+
+          <h2>2.4 Verifying Behavior</h2>
+
+          <h3>verify()</h3>
+          <p>Checks whether an interaction happened.</p>
+
+          <pre><code>verify(userRepository).save(user);</code></pre>
+
+          <p>Verification is about behavior, not return values.</p>
+
+          <div class="callout note">
+            <strong>Verification Timing</strong>
+            Verification happens AFTER the test execution. It checks the mock's interaction history. Common pattern:<br>
+            1. Arrange (setup mocks)<br>
+            2. Act (call method under test)<br>
+            3. Assert (check return value)<br>
+            4. Verify (check mock interactions)
+          </div>
+
+          <h3>times(), never()</h3>
+          <pre><code>verify(repo, times(1)).save(user);
+verify(repo, never()).delete(any());</code></pre>
+
+          <p>Useful when:</p>
+          <ul>
+            <li>Side effects matter</li>
+            <li>Certain calls must not happen</li>
+            <li>Ensuring idempotency</li>
+          </ul>
+
+          <h3>When Verification Is Meaningful</h3>
+
+          <h4>✅ Verify:</h4>
+          <ul>
+            <li>External calls</li>
+            <li>Side effects</li>
+            <li>Notifications</li>
+            <li>State-changing operations</li>
+          </ul>
+
+          <h4>❌ Do NOT verify:</h4>
+          <ul>
+            <li>Internal method calls</li>
+            <li>Pure calculations</li>
+            <li>Value-based logic</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Over-verification leads to brittle tests tied to implementation details. If refactoring breaks tests without
+            changing behavior, you are verifying too much.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>verify(repo).save(user);
+verify(repo, never()).delete(any());</code></pre>
+
+        </section>
+
+        <section id="m3">
+          <h1>MODULE 3 — Mockito Deep Dive (Where Most Devs Fail)</h1>
+
+          <h2>3.1 Argument Matchers</h2>
+
+          <h3>any(), eq()</h3>
+          <p>Argument matchers allow flexible stubbing and verification.</p>
+
+          <pre><code>when(repo.findById(anyLong()))
+    .thenReturn(Optional.of(user));
+
+verify(repo).save(eq(user));</code></pre>
+
+          <ul>
+            <li><code>any()</code> → matches any value of that type</li>
+            <li><code>eq()</code> → matches a specific value</li>
+          </ul>
+
+          <p>Use matchers to avoid brittle tests tied to exact inputs that don't matter.</p>
+
+          <h3>Matcher Rules (All or None)</h3>
+
+          <div class="callout warning">
+            <strong>Critical rule</strong>
+            If you use any matcher, all arguments must use matchers.
+          </div>
+
+          <h4>❌ Wrong</h4>
+          <pre><code>when(service.process(any(), "ACTIVE")).thenReturn(result);</code></pre>
+
+          <h4>✅ Correct</h4>
+          <pre><code>when(service.process(any(), eq("ACTIVE"))).thenReturn(result);</code></pre>
+
+          <p>Mockito cannot mix raw values and matchers because it cannot reliably resolve intent.</p>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>// ❌ Wrong
+when(service.process(any(), "ACTIVE"));
+
+// ✅ Correct
+when(service.process(any(), eq("ACTIVE")));</code></pre>
+
+          <h3>Common Matcher Bugs</h3>
+
+          <details>
+            <summary>Wrong matcher type</summary>
+            <div class="details-body">
+              <pre><code>any()      // Object
+anyString()
+anyLong()</code></pre>
+              <p>Using <code>any()</code> where a primitive wrapper is expected can cause subtle failures.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Matchers hide logic errors</summary>
+            <div class="details-body">
+              <pre><code>verify(repo).save(any());</code></pre>
+              <p>This passes even if the wrong object is saved. Use matchers only when value is irrelevant.</p>
+            </div>
+          </details>
+
+          <h2>3.2 Mock vs Spy</h2>
+
+          <h3>@Mock</h3>
+          <pre><code>@Mock
+UserService service;</code></pre>
+
+          <ul>
+            <li>No real logic executed</li>
+            <li>All methods return defaults unless stubbed</li>
+            <li>Fully isolated</li>
+          </ul>
+          <p>Use mocks for external dependencies.</p>
+
+          <h3>@Spy</h3>
+          <pre><code>@Spy
+UserService service;</code></pre>
+
+          <ul>
+            <li>Real methods are called by default</li>
+            <li>Can stub selected methods</li>
+            <li>Partial mocking</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Spies execute real code, which makes them dangerous in unit tests.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@Spy
+EmailService emailService;
+
+doReturn(true).when(emailService).send(any());
+// Real methods execute unless explicitly stubbed</code></pre>
+
+          <h3>Partial Mocking (When Allowed, When Dangerous)</h3>
+
+          <h4>✅ Acceptable use cases:</h4>
+          <ul>
+            <li>Legacy code you cannot refactor yet</li>
+            <li>Wrapping third-party classes</li>
+            <li>Expensive methods you want to bypass</li>
+          </ul>
+
+          <h4>❌ Dangerous scenarios:</h4>
+          <ul>
+            <li>Business logic classes</li>
+            <li>Services with side effects</li>
+            <li>Code under active development</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            If you need a spy, it often indicates poor design or missing abstraction.
+          </div>
+
+          <h2>3.3 Stubbing Pitfalls</h2>
+
+          <h3>Stubbing Unused Methods</h3>
+          <pre><code>when(repo.findAll()).thenReturn(list);</code></pre>
+
+          <p>If <code>findAll()</code> is never called:</p>
+          <ul>
+            <li>Test still passes</li>
+            <li>Stub is meaningless</li>
+            <li>Indicates copy-paste or outdated test logic</li>
+          </ul>
+          <p>Mockito strictness can detect this automatically.</p>
+
+          <h3>Stubbing Final Methods</h3>
+          <p>By default, Mockito cannot mock final methods/classes (unless inline mocking is enabled).</p>
+
+          <pre><code>final class Utility { ... }</code></pre>
+
+          <p>Mocking such code is a design smell:</p>
+          <ul>
+            <li>Prefer interfaces</li>
+            <li>Prefer composition</li>
+            <li>Avoid static/final-heavy designs</li>
+          </ul>
+
+          <h3>Null Returns & NPE Traps</h3>
+          <p>Mockito returns null for unstubbed object methods.</p>
+
+          <pre><code>when(repo.findById(1L)).thenReturn(null); // dangerous</code></pre>
+
+          <p>This can cause:</p>
+          <ul>
+            <li>Unexpected <code>NullPointerException</code></li>
+            <li>Tests failing far from root cause</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Prefer returning empty <code>Optional</code> or empty collections, not nulls.
+          </div>
+
+          <h2>3.4 Mockito Strictness</h2>
+
+          <h3>Unnecessary Stubbing</h3>
+          <p>Mockito detects stubs that are never used.</p>
+
+          <pre><code>when(repo.findById(1L)).thenReturn(user);</code></pre>
+
+          <p>If not called → test fails under strict mode.</p>
+
+          <p>This is good:</p>
+          <ul>
+            <li>Keeps tests clean</li>
+            <li>Prevents misleading setup</li>
+            <li>Encourages intent-driven tests</li>
+          </ul>
+
+          <h3>Lenient Mocks</h3>
+          <pre><code>lenient().when(repo.findById(any()))
+    .thenReturn(user);</code></pre>
+
+          <p>Use only when:</p>
+          <ul>
+            <li>Shared setup across many tests</li>
+            <li>Stub is optional by design</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Avoid making everything lenient — it disables Mockito's most valuable feedback.
+          </div>
+
+        </section>
+
+        <section id="m4">
+          <h1>MODULE 4 — Testing Business Logic (Service Layer)</h1>
+
+          <h2>4.1 Service Test Design</h2>
+
+          <h3>One Service = One Test Class</h3>
+          <p>Each service should have exactly one corresponding test class.</p>
+
+          <pre><code>UserService       → UserServiceTest
+OrderService      → OrderServiceTest</code></pre>
+
+          <p>This enforces ownership and keeps tests discoverable.</p>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            If a test needs multiple services, it likely belongs to an integration test, not a unit test.
+          </div>
+
+          <h3>Testing Happy Path vs Edge Cases</h3>
+
+          <details>
+            <summary>Happy Path</summary>
+            <div class="details-body">
+              <ul>
+                <li>Valid input</li>
+                <li>Expected dependencies behavior</li>
+                <li>Successful outcome</li>
+              </ul>
+              <p><strong>Example:</strong></p>
+              <ul>
+                <li>User exists</li>
+                <li>Data is valid</li>
+                <li>Save succeeds</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Edge Cases</summary>
+            <div class="details-body">
+              <ul>
+                <li>Null or empty input</li>
+                <li>Boundary values</li>
+                <li>Dependency failures</li>
+                <li>Invalid state transitions</li>
+              </ul>
+              <div class="callout note">
+                <strong>Real-World Impact</strong>
+                Edge cases often represent actual production scenarios:<br>
+                • Null inputs from API clients<br>
+                • Database connection failures<br>
+                • Concurrent modification conflicts<br>
+                • Timeout scenarios<br>
+                Testing only happy paths gives 50% real-world coverage at best.
+              </div>
+            </div>
+          </details>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Edge cases are where most production bugs live; skipping them gives false confidence.
+          </div>
+
+          <h2>4.2 Exception Testing</h2>
+
+          <h3>assertThrows</h3>
+          <p>Used to validate error conditions explicitly.</p>
+
+          <pre><code>assertThrows(UserNotFoundException.class,
+    () -> userService.getUser(1L));</code></pre>
+
+          <p>This ensures:</p>
+          <ul>
+            <li>Correct exception type</li>
+            <li>Correct execution path</li>
+          </ul>
+
+          <h3>Custom Exceptions</h3>
+          <p>Services should throw domain-specific exceptions, not generic ones.</p>
+
+          <pre><code>throw new UserNotFoundException("User not found");</code></pre>
+
+          <p>This improves:</p>
+          <ul>
+            <li>Readability</li>
+            <li>Error handling</li>
+            <li>API-layer mapping</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Unit tests should assert these exceptions directly, not framework-level exceptions.
+          </div>
+
+          <h3>Validating Error Messages</h3>
+          <pre><code>UserNotFoundException ex =
+    assertThrows(UserNotFoundException.class,
+        () -> userService.getUser(1L));
+
+assertThat(ex.getMessage())
+    .contains("User not found");</code></pre>
+
+          <p>Validate messages only when:</p>
+          <ul>
+            <li>Message is part of API contract</li>
+            <li>Message is logged or returned to client</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Avoid strict message matching unless required.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>assertThatThrownBy(() -> service.getUser(1L))
+    .isInstanceOf(UserNotFoundException.class)
+    .hasMessageContaining("not found");</code></pre>
+
+          <h2>4.3 Conditional Logic</h2>
+
+          <h3>Branch Coverage</h3>
+          <p>Every logical branch must be tested at least once.</p>
+
+          <pre><code>if (user.isActive()) {
+    ...
+} else {
+    ...
+}</code></pre>
+
+          <p>Tests should exist for:</p>
+          <ul>
+            <li>true branch</li>
+            <li>false branch</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Coverage tools help, but thinking in branches is more reliable.
+          </div>
+
+          <h3>Testing if / else / switch</h3>
+          <p>For complex conditionals:</p>
+          <ul>
+            <li>One test per branch</li>
+            <li>Clear naming per condition</li>
+          </ul>
+
+          <pre><code>shouldApproveOrderWhenAmountIsBelowLimit()
+shouldRejectOrderWhenAmountExceedsLimit()</code></pre>
+
+          <p>Switch statements require tests for:</p>
+          <ul>
+            <li>Each case</li>
+            <li>Default branch</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Missing default branch tests often hide production defects.
+          </div>
+
+          <h2>4.4 Transactions & Side Effects</h2>
+
+          <h3>What to Mock</h3>
+          <p>Mock everything external to the service:</p>
+          <ul>
+            <li>Repositories</li>
+            <li>REST clients</li>
+            <li>Message brokers</li>
+            <li>Email/SMS services</li>
+            <li>File systems</li>
+          </ul>
+
+          <p>Mocks keep tests:</p>
+          <ul>
+            <li>Fast</li>
+            <li>Deterministic</li>
+            <li>Focused on logic</li>
+          </ul>
+
+          <h3>What NOT to Mock</h3>
+          <p>Do NOT mock:</p>
+          <ul>
+            <li>The service under test</li>
+            <li>Value objects</li>
+            <li>Domain models</li>
+            <li>Simple utilities</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Avoid mocking transaction boundaries or annotations; test behavior, not framework wiring.
+          </div>
+
+          <h3>Transactional Side Effects</h3>
+          <p>Verify side effects carefully:</p>
+
+          <pre><code>verify(orderRepository).save(order);
+verify(notificationService).send(order);</code></pre>
+
+          <p>Do not verify:</p>
+          <ul>
+            <li>Internal helper methods</li>
+            <li>Private method calls</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Side effects matter only at system boundaries.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>verify(orderRepository).save(order);
+verify(notificationService).send(order);</code></pre>
+
+        </section>
+
+        <section id="m5">
+          <h1>MODULE 5 — Controller Layer Testing (Backend API Focus)</h1>
+
+          <h2>5.1 Controller Testing Philosophy</h2>
+
+          <h3>Why Controllers Are Not "Unit" Tests</h3>
+          <p>Controller tests are not pure unit tests because they involve:</p>
+          <ul>
+            <li>Spring MVC infrastructure</li>
+            <li>Request mapping</li>
+            <li>Serialization / deserialization</li>
+            <li>Validation</li>
+          </ul>
+
+          <p>Even with mocks, the framework is active.</p>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            These tests sit between unit tests and integration tests.
+          </div>
+
+          <h3>What Is Actually Verified</h3>
+          <p>Controller tests verify:</p>
+          <ul>
+            <li>Correct URL mapping</li>
+            <li>HTTP method handling</li>
+            <li>Request validation</li>
+            <li>Response structure</li>
+            <li>Status codes</li>
+            <li>Exception translation</li>
+          </ul>
+
+          <p>They do <strong>not</strong> verify business logic — that belongs in service tests.</p>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            If a controller test fails due to business rules, responsibility is misplaced.
+          </div>
+
+          <div class="callout note">
+            <strong>Separation of Concerns</strong>
+            Controllers should be thin orchestrators:<br>
+            • Parse request → Controller<br>
+            • Validate input → Controller (framework)<br>
+            • Execute logic → Service (tested separately)<br>
+            • Map response → Controller<br>
+            If your controller test has complex business assertions, the logic belongs in the service layer.
+          </div>
+
+          <h2>5.2 MockMvc</h2>
+
+          <h3>@WebMvcTest</h3>
+          <pre><code>@WebMvcTest(UserController.class)
+class UserControllerTest {
+}</code></pre>
+
+          <details>
+            <summary>Loads:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Controller</li>
+                <li>Spring MVC components</li>
+                <li>Jackson</li>
+                <li>Validation</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Does NOT load:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Services</li>
+                <li>Repositories</li>
+                <li>Full application context</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This keeps tests fast and focused.
+          </div>
+
+          <h3>@MockBean</h3>
+          <pre><code>@MockBean
+UserService userService;</code></pre>
+
+          <ul>
+            <li>Replaces Spring bean with a Mockito mock</li>
+            <li>Allows controller to function without real services</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Use <code>@MockBean</code> (not <code>@Mock</code>) because Spring manages the context.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>mockMvc.perform(get("/users/1"))
+    .andExpect(status().isOk())
+    .andExpect(jsonPath("$.id").value(1));</code></pre>
+
+          <h3>Request Building (GET, POST, PUT, DELETE)</h3>
+          <pre><code>mockMvc.perform(get("/users/1"))
+
+mockMvc.perform(post("/users")
+    .contentType(MediaType.APPLICATION_JSON)
+    .content(json))
+
+mockMvc.perform(put("/users/1"))
+
+mockMvc.perform(delete("/users/1"))</code></pre>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Requests should mirror real API usage — incorrect requests lead to misleading tests.
+          </div>
+
+          <h2>5.3 Request / Response Validation</h2>
+
+          <h3>Status Codes</h3>
+          <pre><code>.andExpect(status().isOk());
+.andExpect(status().isCreated());
+.andExpect(status().isBadRequest());
+.andExpect(status().isNotFound());</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Status codes are part of the API contract and must be asserted explicitly.
+          </div>
+
+          <h3>Headers</h3>
+          <pre><code>.andExpect(header().exists("Content-Type"));
+.andExpect(header().string("Content-Type", "application/json"));</code></pre>
+
+          <p>Headers matter for:</p>
+          <ul>
+            <li>Caching</li>
+            <li>Security</li>
+            <li>Content negotiation</li>
+          </ul>
+
+          <p>Test them when they affect client behavior.</p>
+
+          <h3>JSON Body Assertions</h3>
+          <pre><code>.andExpect(jsonPath("$.id").value(1))
+.andExpect(jsonPath("$.name").value("John"));</code></pre>
+
+          <p>Test:</p>
+          <ul>
+            <li>Required fields</li>
+            <li>Data types</li>
+            <li>Field presence / absence</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Avoid asserting entire JSON unless the response is small and stable.
+          </div>
+
+          <h2>5.4 Error Handling</h2>
+
+          <h3>GlobalExceptionHandler Tests</h3>
+          <p>Controller tests should validate how exceptions are translated to HTTP responses.</p>
+
+          <pre><code>when(userService.getUser(1L))
+    .thenThrow(new UserNotFoundException("User not found"));
+
+.andExpect(status().isNotFound())
+.andExpect(jsonPath("$.message")
+    .value("User not found"));</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This ensures consistent API error contracts.
+          </div>
+
+          <h3>Validation Errors</h3>
+          <pre><code>.andExpect(status().isBadRequest())
+.andExpect(jsonPath("$.errors").isArray());</code></pre>
+
+          <p>Test:</p>
+          <ul>
+            <li>Missing required fields</li>
+            <li>Invalid formats</li>
+            <li>Constraint violations</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Validation tests protect the API boundary and prevent bad data from entering the system.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>mockMvc.perform(post("/users")
+    .contentType(APPLICATION_JSON)
+    .content("{}"))
+    .andExpect(status().isBadRequest());</code></pre>
+
+        </section>
+
+        <section id="m6">
+          <h1>MODULE 6 — Repository & Database Testing</h1>
+
+          <h2>6.1 What NOT to Mock</h2>
+
+          <h3>JPA Repositories</h3>
+          <p>Do not mock JPA repositories in repository tests.</p>
+
+          <p>Repositories are already abstractions over persistence. Mocking them only tests Mockito, not SQL, mappings,
+            or database behavior.</p>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            If a repository test uses mocks, it is not a repository test.
+          </div>
+
+          <div class="callout note">
+            <strong>Why This Matters</strong>
+            Mocking a repository tests Mockito configuration, not:<br>
+            • SQL query correctness<br>
+            • Column mapping accuracy<br>
+            • Relationship loading (lazy/eager)<br>
+            • Constraint enforcement<br>
+            • Index usage<br>
+            Real database tests catch schema mismatches that mocks hide.
+          </div>
+
+          <h3>Entity Classes</h3>
+          <p>Never mock entities.</p>
+
+          <h4>Entities represent:</h4>
+          <ul>
+            <li>Database structure</li>
+            <li>Constraints</li>
+            <li>Relationships</li>
+            <li>Lifecycle behavior</li>
+          </ul>
+
+          <h4>Mocking entities hides:</h4>
+          <ul>
+            <li>Mapping errors</li>
+            <li>Lazy loading issues</li>
+            <li>Constraint violations</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Entities must be tested with a real persistence context.
+          </div>
+
+          <h2>6.2 Repository Tests</h2>
+
+          <h3>@DataJpaTest</h3>
+          <pre><code>@DataJpaTest
+class UserRepositoryTest {
+}</code></pre>
+
+          <details>
+            <summary>Loads:</summary>
+            <div class="details-body">
+              <ul>
+                <li>JPA repositories</li>
+                <li>EntityManager</li>
+                <li>Hibernate</li>
+                <li>Transaction management</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Does NOT load:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Controllers</li>
+                <li>Services</li>
+                <li>Web layer</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This makes repository tests fast but realistic.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@DataJpaTest
+class UserRepositoryTest {
+    @Autowired
+    UserRepository repo;
+}</code></pre>
+
+          <h3>H2 vs Real DB</h3>
+
+          <details>
+            <summary>H2 (In-Memory Database)</summary>
+            <div class="details-body">
+              <h4>Pros:</h4>
+              <ul>
+                <li>Fast</li>
+                <li>Easy to set up</li>
+              </ul>
+              <h4>Cons (serious):</h4>
+              <ul>
+                <li>SQL dialect differences</li>
+                <li>Different constraint handling</li>
+                <li>Different indexing behavior</li>
+                <li>False positives</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            H2 passing does not guarantee production DB correctness.
+          </div>
+
+          <div class="callout note">
+            <strong>Real Production Failures</strong>
+            Common H2 vs PostgreSQL differences that cause production bugs:<br>
+            • H2 is case-insensitive by default; PostgreSQL is case-sensitive<br>
+            • H2 auto-converts types; PostgreSQL is strict<br>
+            • H2 doesn't enforce foreign key constraints in all modes<br>
+            • Date/time precision differs (milliseconds vs microseconds)<br>
+            • JSON column support is completely different<br>
+            Tests passing in H2 but failing in production is a common CI/CD trap.
+          </div>
+
+          <h3>Schema Validation</h3>
+          <p>Repository tests should validate:</p>
+          <ul>
+            <li>Column names</li>
+            <li>Data types</li>
+            <li>Constraints</li>
+            <li>Relationships</li>
+            <li>Unique indexes</li>
+          </ul>
+
+          <pre><code>spring.jpa.hibernate.ddl-auto=validate</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This ensures entities actually match the schema, not just compile.
+          </div>
+
+          <h2>6.3 Testcontainers (Modern Standard)</h2>
+
+          <h3>Why H2 Is Dangerous</h3>
+          <p>H2 behaves differently from:</p>
+          <ul>
+            <li>PostgreSQL</li>
+            <li>MySQL</li>
+            <li>Oracle</li>
+          </ul>
+
+          <h4>Examples:</h4>
+          <ul>
+            <li>Case sensitivity</li>
+            <li>JSON columns</li>
+            <li>Date/time precision</li>
+            <li>Index usage</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            These differences cause bugs that appear only in production.
+          </div>
+
+          <h3>Using PostgreSQL / MySQL Containers</h3>
+          <p>Testcontainers spins up a real database in Docker for tests.</p>
+
+          <pre><code>@Testcontainers
+class UserRepositoryTest {
+}</code></pre>
+
+          <h4>Advantages:</h4>
+          <ul>
+            <li>Same engine as production</li>
+            <li>Same SQL behavior</li>
+            <li>Same constraints</li>
+            <li>Same edge cases</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            The startup cost is worth the correctness.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@Container
+static PostgreSQLContainer<?> db =
+    new PostgreSQLContainer<>("postgres:15");</code></pre>
+
+          <h3>Reproducible DB Tests</h3>
+          <p>Testcontainers provides:</p>
+          <ul>
+            <li>Clean database per test run</li>
+            <li>No shared state</li>
+            <li>No manual setup</li>
+            <li>Same results on every machine</li>
+          </ul>
+
+          <h4>This eliminates:</h4>
+          <ul>
+            <li>"Works on my machine"</li>
+            <li>Environment-specific failures</li>
+            <li>CI vs local inconsistencies</li>
+          </ul>
+
+        </section>
+
+        <section id="m7">
+          <h1>MODULE 7 — Integration Testing (Senior-Level Skill)</h1>
+
+          <h2>7.1 @SpringBootTest</h2>
+
+          <h3>When to Use</h3>
+          <pre><code>@SpringBootTest
+class OrderIntegrationTest {
+}</code></pre>
+
+          <p>Use <code>@SpringBootTest</code> when you need to verify:</p>
+          <ul>
+            <li>Real bean wiring</li>
+            <li>Configuration correctness</li>
+            <li>Cross-layer behavior</li>
+            <li>Transaction boundaries</li>
+            <li>Serialization + persistence together</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This is the closest test to real application behavior without deploying the app.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@SpringBootTest
+@AutoConfigureMockMvc
+class UserIntegrationTest {
+    // Verifies real wiring + DB + serialization
+}</code></pre>
+
+          <h3>When to Avoid</h3>
+          <p>Avoid <code>@SpringBootTest</code> when:</p>
+          <ul>
+            <li>Testing pure business logic</li>
+            <li>Testing a single service in isolation</li>
+            <li>Testing controller request mapping only</li>
+            <li>Fast feedback is required</li>
+          </ul>
+
+          <h4>Overusing it leads to:</h4>
+          <ul>
+            <li>Slow test suites</li>
+            <li>Large memory usage</li>
+            <li>Fragile tests tied to configuration</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            If a test can pass with <code>@WebMvcTest</code> or <code>@DataJpaTest</code>, it should not be a
+            <code>@SpringBootTest</code>.
+          </div>
+
+          <h2>7.2 Context Management</h2>
+
+          <h3>Application Context Caching</h3>
+          <p>Spring caches application contexts between tests with the same configuration.</p>
+
+          <details>
+            <summary>Benefits:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Faster test execution</li>
+                <li>Lower resource usage</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Risks:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Shared mutable state</li>
+                <li>Test interference</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Context caching is safe only when tests do not mutate global state.
+          </div>
+
+          <h3>Profile-Based Configs</h3>
+          <p>Use profiles to isolate integration test configuration.</p>
+
+          <pre><code>@ActiveProfiles("test")</code></pre>
+
+          <h4>Typical test profile differences:</h4>
+          <ul>
+            <li>Test database</li>
+            <li>Disabled schedulers</li>
+            <li>Mocked external services</li>
+            <li>Reduced logging</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Profiles keep integration tests realistic without touching production settings.
+          </div>
+
+          <h2>7.3 Integration Boundaries</h2>
+
+          <h3>Service + DB</h3>
+
+          <details>
+            <summary>Tests:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Service logic</li>
+                <li>Real repository queries</li>
+                <li>Transaction behavior</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Does NOT test:</summary>
+            <div class="details-body">
+              <ul>
+                <li>Controllers</li>
+                <li>Serialization</li>
+                <li>HTTP layer</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This boundary is ideal for validating domain logic + persistence correctness.
+          </div>
+
+          <h3>Controller + Service + DB</h3>
+          <p>End-to-end backend validation without UI.</p>
+
+          <h4>Tests:</h4>
+          <ul>
+            <li>Request mapping</li>
+            <li>Validation</li>
+            <li>Service logic</li>
+            <li>Database persistence</li>
+            <li>Response mapping</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            This boundary gives maximum confidence but must be used sparingly due to cost.
+          </div>
+
+        </section>
+
+        <section id="m8">
+          <h1>MODULE 8 — Security Testing (Spring Security)</h1>
+
+          <h2>8.1 Testing Secured Endpoints</h2>
+
+          <h3>@WithMockUser</h3>
+          <pre><code>@WithMockUser(username = "admin", roles = "ADMIN")
+@Test
+void shouldAllowAdminAccess() throws Exception {
+    mockMvc.perform(get("/admin/users"))
+        .andExpect(status().isOk());
+}</code></pre>
+
+          <p><code>@WithMockUser</code> injects a fake authenticated user into the security context.</p>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            It bypasses real authentication and focuses purely on authorization rules.
+          </div>
+
+          <h3>Role-Based Access Tests</h3>
+          <p>Each secured endpoint should have tests for:</p>
+          <ul>
+            <li>Allowed roles → success</li>
+            <li>Disallowed roles → forbidden</li>
+            <li>Unauthenticated access → unauthorized</li>
+          </ul>
+
+          <pre><code>@WithMockUser(roles = "USER")
+@Test
+void shouldForbidUserAccess() throws Exception {
+    mockMvc.perform(get("/admin/users"))
+        .andExpect(status().isForbidden());
+}</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            These tests protect against accidental role misconfiguration during refactoring.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@WithMockUser(roles = "ADMIN")
+@Test
+void shouldAllowAdminAccess() {}
+
+mockMvc.perform(get("/admin"))
+    .andExpect(status().isForbidden());</code></pre>
+
+          <h2>8.2 JWT / Authentication Testing</h2>
+
+          <h3>Mocking Authentication</h3>
+          <p>For JWT-based systems, authentication can be mocked using:</p>
+          <ul>
+            <li><code>@WithMockUser</code></li>
+            <li>Security test utilities (<code>jwt()</code> in Spring Security test support)</li>
+          </ul>
+
+          <pre><code>mockMvc.perform(get("/users/me")
+    .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+    .andExpect(status().isOk());</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This validates authorization logic without generating real tokens.
+          </div>
+
+          <h3>Testing Authorization Failures</h3>
+          <p>Always test failure paths explicitly.</p>
+
+          <pre><code>mockMvc.perform(get("/users/me"))
+    .andExpect(status().isUnauthorized());
+
+mockMvc.perform(get("/admin/users")
+    .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"))))
+    .andExpect(status().isForbidden());</code></pre>
+
+          <h4>Key distinction:</h4>
+          <ul>
+            <li><strong>401 Unauthorized</strong> → not authenticated</li>
+            <li><strong>403 Forbidden</strong> → authenticated but not allowed</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Confusing these two is a common production bug.
+          </div>
+
+        </section>
+
+        <section id="m9">
+          <h1>MODULE 9 — Advanced Testing Techniques</h1>
+
+          <h2>9.1 Parameterized Tests</h2>
+
+          <h3>@ParameterizedTest</h3>
+          <p>Allows the same test logic to run with multiple inputs.</p>
+
+          <pre><code>@ParameterizedTest
+@ValueSource(ints = {1, 2, 3})
+void shouldAcceptPositiveNumbers(int input) {
+    assertThat(service.isValid(input)).isTrue();
+}</code></pre>
+
+          <p>This avoids duplication while ensuring broad input coverage.</p>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Use parameterized tests when logic is identical but data varies.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>@ParameterizedTest
+@CsvSource({"1,2,3","2,3,5"})
+void shouldAdd(int a, int b, int sum) {
+    assertEquals(sum, calc.add(a, b));
+}</code></pre>
+
+          <h3>CSV / Method Sources</h3>
+
+          <details>
+            <summary>CSV Source</summary>
+            <div class="details-body">
+              <pre><code>@ParameterizedTest
+@CsvSource({
+    "10, 2, 5",
+    "20, 4, 5"
+})
+void shouldDivideCorrectly(int a, int b, int expected) {
+    assertThat(calculator.divide(a, b)).isEqualTo(expected);
+}</code></pre>
+              <p>Best for small, readable datasets.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Method Source</summary>
+            <div class="details-body">
+              <pre><code>@ParameterizedTest
+@MethodSource("invalidInputs")
+void shouldRejectInvalidInputs(String input) {
+    assertThatThrownBy(() -> service.process(input))
+        .isInstanceOf(IllegalArgumentException.class);
+}
+
+static Stream&lt;String&gt; invalidInputs() {
+    return Stream.of(null, "", " ");
+}</code></pre>
+              <p>Use method sources when:</p>
+              <ul>
+                <li>Data is complex</li>
+                <li>Objects are involved</li>
+                <li>Setup logic is required</li>
+              </ul>
+            </div>
+          </details>
+
+          <h2>9.2 Time & Randomness</h2>
+
+          <h3>Testing Time-Dependent Code</h3>
+          <p>Directly using system time makes tests non-deterministic.</p>
+
+          <h4>❌ Bad</h4>
+          <pre><code>LocalDate.now()</code></pre>
+
+          <p>Tests may fail depending on:</p>
+          <ul>
+            <li>Time zone</li>
+            <li>Execution time</li>
+            <li>Day changes</li>
+          </ul>
+
+          <h3>Clock Injection</h3>
+          <p>Inject <code>Clock</code> instead of calling system time directly.</p>
+
+          <pre><code>public OrderService(Clock clock) {
+    this.clock = clock;
+}
+
+Clock fixedClock = Clock.fixed(
+    Instant.parse("2025-01-01T00:00:00Z"),
+    ZoneId.of("UTC")
+);</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This makes time fully controllable and tests repeatable.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>Clock fixedClock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), UTC);</code></pre>
+
+          <h3>Avoiding Flaky Tests</h3>
+
+          <h4>Common causes:</h4>
+          <ul>
+            <li>Time-based logic</li>
+            <li>Random values</li>
+            <li>Async behavior</li>
+            <li>Thread sleeps</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Engineering rule</strong>
+            If a test fails once in 100 runs, it is broken.
+          </div>
+
+          <h4>Always replace:</h4>
+          <ul>
+            <li><code>Thread.sleep()</code></li>
+            <li>Random generators</li>
+            <li>System time</li>
+          </ul>
+          <p>with controllable abstractions.</p>
+
+          <h2>9.3 Static Methods & Utilities</h2>
+
+          <h3>Why Static Kills Testability</h3>
+          <p>Static methods:</p>
+          <ul>
+            <li>Cannot be easily mocked</li>
+            <li>Hide dependencies</li>
+            <li>Encourage global state</li>
+            <li>Break isolation</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            They tightly couple code to implementation rather than behavior.
+          </div>
+
+          <h3>Refactoring Strategies</h3>
+
+          <details>
+            <summary>Extract interface</summary>
+            <div class="details-body">
+              <pre><code>TimeProvider.now()</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>Use dependency injection</summary>
+            <div class="details-body">
+              <pre><code>class Service {
+    private final TimeProvider timeProvider;
+}</code></pre>
+            </div>
+          </details>
+
+          <details>
+            <summary>Wrap static calls</summary>
+            <div class="details-body">
+              <pre><code>class DateUtilsWrapper {
+    LocalDate now() {
+        return LocalDate.now();
+    }
+}</code></pre>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            These strategies preserve behavior while restoring testability.
+          </div>
+
+        </section>
+
+        <section id="m10">
+          <h1>MODULE 10 — Code Quality & Coverage</h1>
+
+          <h2>10.1 Code Coverage Tools</h2>
+
+          <h3>JaCoCo</h3>
+          <p>JaCoCo is the de-facto standard for Java coverage measurement.</p>
+
+          <h4>What it measures:</h4>
+          <ul>
+            <li>Line coverage</li>
+            <li>Branch coverage</li>
+            <li>Method coverage</li>
+            <li>Class coverage</li>
+          </ul>
+
+          <h4>What it does not measure:</h4>
+          <ul>
+            <li>Test quality</li>
+            <li>Correct assertions</li>
+            <li>Meaningful behavior verification</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Coverage is a feedback tool, not a goal.
+          </div>
+
+          <h3>Line vs Branch Coverage</h3>
+
+          <details>
+            <summary>Line Coverage</summary>
+            <div class="details-body">
+              <p>Measures executed lines</p>
+              <ul>
+                <li>Easy to increase</li>
+                <li>Easy to fake</li>
+              </ul>
+              <pre><code>if (x > 0) {
+    doA();
+} else {
+    doB();
+}</code></pre>
+              <p>Running only the if block gives 100% line coverage for <code>doA()</code> but misses behavior.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Branch Coverage</summary>
+            <div class="details-body">
+              <p>Measures decision paths (if, else, switch, ternary)</p>
+              <ul>
+                <li>Much harder to fake</li>
+                <li>More representative of logic correctness</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Branch coverage reveals missing edge cases that line coverage hides.
+          </div>
+
+          <h2>10.2 Coverage Myths</h2>
+
+          <h3>Why 100% Coverage Is Useless</h3>
+          <p>You can reach 100% coverage by:</p>
+          <ul>
+            <li>Asserting nothing</li>
+            <li>Testing getters/setters</li>
+            <li>Mocking everything</li>
+            <li>Calling methods without verifying behavior</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            High coverage with weak assertions gives false confidence.
+          </div>
+
+          <p>Coverage answers "what ran?", not "what was validated?"</p>
+
+          <h3>What Good Coverage Looks Like</h3>
+          <p>Good coverage:</p>
+          <ul>
+            <li>Targets business logic</li>
+            <li>Covers branches and error paths</li>
+            <li>Leaves trivial code untested</li>
+            <li>Correlates with bug reduction</li>
+          </ul>
+
+          <h4>Typical healthy ranges (context-dependent):</h4>
+          <ul>
+            <li>Unit tests: high branch coverage</li>
+            <li>Integration tests: lower but meaningful</li>
+            <li>Overall: enough to sleep at night</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            The question is not "How much?", but "What is protected?"
+          </div>
+
+          <h2>10.3 Test Smells</h2>
+
+          <h3>God Tests</h3>
+          <p>One test that:</p>
+          <ul>
+            <li>Sets up everything</li>
+            <li>Calls many methods</li>
+            <li>Asserts many outcomes</li>
+          </ul>
+
+          <h4>Problems:</h4>
+          <ul>
+            <li>Hard to understand</li>
+            <li>Hard to debug</li>
+            <li>Breaks on small changes</li>
+          </ul>
+
+          <h4>Fix:</h4>
+          <ul>
+            <li>One behavior per test</li>
+            <li>Clear intent and naming</li>
+          </ul>
+
+          <h3>Duplicate Setup</h3>
+          <p>Repeated setup code across tests indicates:</p>
+          <ul>
+            <li>Missing helper methods</li>
+            <li>Poor test structure</li>
+            <li>Overly complex object creation</li>
+          </ul>
+
+          <h4>Fixes:</h4>
+          <ul>
+            <li>Use <code>@BeforeEach</code></li>
+            <li>Use builders or test factories</li>
+            <li>Extract reusable setup methods</li>
+          </ul>
+
+          <h3>Over-Mocking</h3>
+          <p>Mocking everything leads to:</p>
+          <ul>
+            <li>Tests coupled to implementation</li>
+            <li>Refactoring pain</li>
+            <li>Missed integration bugs</li>
+          </ul>
+
+          <h4>Symptoms:</h4>
+          <ul>
+            <li>Verifying internal method calls</li>
+            <li>Excessive <code>when()</code> stubbing</li>
+            <li>No real objects involved</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Mocks should support testing, not replace reality.
+          </div>
+
+        </section>
+
+        <section id="m11">
+          <h1>MODULE 11 — CI/CD & Real-World Practices</h1>
+
+          <h2>11.1 Running Tests in Pipelines</h2>
+
+          <h3>Maven / Gradle Lifecycle</h3>
+
+          <details>
+            <summary>Maven</summary>
+            <div class="details-body">
+              <ul>
+                <li><code>test</code> → runs unit tests</li>
+                <li><code>verify</code> → runs all checks (unit + integration)</li>
+                <li><code>install</code> → packages only if tests pass</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Gradle</summary>
+            <div class="details-body">
+              <ul>
+                <li><code>test</code> → runs unit tests</li>
+                <li><code>check</code> → runs all verification tasks</li>
+                <li><code>build</code> → full pipeline execution</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Tests are first-class build steps, not optional extras.
+          </div>
+
+          <h3>Failing Builds on Test Failure</h3>
+          <p>A pipeline must fail immediately if tests fail.</p>
+
+          <h4>Reasons:</h4>
+          <ul>
+            <li>Prevents broken code from propagating</li>
+            <li>Forces early feedback</li>
+            <li>Maintains team trust in CI</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Allowing flaky or ignored failures is worse than having no CI at all.
+          </div>
+
+          <h2>11.2 Test Performance</h2>
+
+          <h3>Fast vs Slow Tests</h3>
+
+          <details>
+            <summary>Fast Tests</summary>
+            <div class="details-body">
+              <ul>
+                <li>Unit tests</li>
+                <li>No Spring context</li>
+                <li>No database</li>
+                <li>Milliseconds execution</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Slow Tests</summary>
+            <div class="details-body">
+              <ul>
+                <li>Integration tests</li>
+                <li><code>@SpringBootTest</code></li>
+                <li>Real database</li>
+                <li>External systems</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Fast tests provide developer feedback; slow tests provide system confidence. Both are required, but must be
+            managed differently.
+          </div>
+
+          <h3>Splitting Test Phases</h3>
+          <p>Separate tests by purpose, not by location.</p>
+
+          <h4>Common strategies:</h4>
+          <ul>
+            <li>Unit tests → run on every commit</li>
+            <li>Integration tests → run on merge or nightly</li>
+            <li>End-to-end tests → run sparingly</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This keeps pipelines fast without sacrificing coverage where it matters.
+          </div>
+
+          <h2>11.3 Test Maintainability</h2>
+
+          <h3>Refactoring Tests</h3>
+          <p>Tests are code and must be refactored like production code.</p>
+
+          <h4>Refactor when:</h4>
+          <ul>
+            <li>Tests are hard to read</li>
+            <li>Setup dominates assertions</li>
+            <li>Failures are unclear</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            Ignoring test quality leads to fragile suites that teams stop trusting.
+          </div>
+
+          <p><strong>Example:</strong></p>
+          <pre><code>// ❌ God test (bad)
+@Test
+void testEverything() { ... }
+
+// ✅ Focused test
+@Test
+void shouldRejectInvalidEmail() { ... }</code></pre>
+
+          <h3>Naming Strategies</h3>
+          <p>Good names describe behavior and intent.</p>
+
+          <h4>Examples:</h4>
+          <pre><code>shouldRejectOrderWhenStockIsInsufficient
+shouldReturn404WhenUserDoesNotExist</code></pre>
+
+          <h4>Bad names hide purpose:</h4>
+          <pre><code>testOrder()
+testCase1()</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Well-named tests act as living documentation and reduce onboarding cost.
+          </div>
+
+        </section>
+
+        <section id="m12">
+          <h1>MODULE 12 — Interview & Production Readiness</h1>
+
+          <h2>12.1 Common Interview Questions</h2>
+
+          <h3>Mock vs Stub</h3>
+
+          <details>
+            <summary>Stub</summary>
+            <div class="details-body">
+              <ul>
+                <li>Provides predefined responses</li>
+                <li>Used to control test flow</li>
+                <li>No interaction verification</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Mock</summary>
+            <div class="details-body">
+              <ul>
+                <li>Can stub responses</li>
+                <li>Can verify interactions</li>
+                <li>Focuses on behavior</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Interview-safe summary</strong>
+            Stubs provide data; mocks verify behavior.
+          </div>
+
+          <h3>@Mock vs @MockBean</h3>
+
+          <details>
+            <summary>@Mock</summary>
+            <div class="details-body">
+              <ul>
+                <li>Mockito annotation</li>
+                <li>Creates a mock in the test class</li>
+                <li>Does NOT register with Spring context</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>@MockBean</summary>
+            <div class="details-body">
+              <ul>
+                <li>Spring Boot annotation</li>
+                <li>Replaces a real bean in application context</li>
+                <li>Used in controller and integration tests</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Rule of thumb</strong>
+            Unit tests → <code>@Mock</code><br>
+            Spring context tests → <code>@MockBean</code>
+          </div>
+
+          <h3>Unit vs Integration Test</h3>
+
+          <details>
+            <summary>Unit Test</summary>
+            <div class="details-body">
+              <ul>
+                <li>Tests one class</li>
+                <li>Mocks dependencies</li>
+                <li>Fast and isolated</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Integration Test</summary>
+            <div class="details-body">
+              <ul>
+                <li>Tests multiple components together</li>
+                <li>Real beans and infrastructure</li>
+                <li>Slower but realistic</li>
+              </ul>
+            </div>
+          </details>
+
+          <div class="callout note">
+            <strong>Key difference</strong>
+            Isolation vs realism.
+          </div>
+
+          <h2>12.2 Debugging Failing Tests</h2>
+
+          <h3>Mockito Misconfiguration</h3>
+
+          <h4>Common causes:</h4>
+          <ul>
+            <li>Missing <code>@ExtendWith(MockitoExtension.class)</code></li>
+            <li>Using <code>@Mock</code> instead of <code>@MockBean</code></li>
+            <li>Mixing matchers incorrectly</li>
+            <li>Unused or missing stubs</li>
+          </ul>
+
+          <h4>Debug strategy:</h4>
+          <ul>
+            <li>Check mock initialization first</li>
+            <li>Reduce matchers</li>
+            <li>Verify only external interactions</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Mockito failures are usually configuration errors, not logic bugs.
+          </div>
+
+          <h3>Context Loading Failures</h3>
+
+          <h4>Common causes:</h4>
+          <ul>
+            <li>Missing beans</li>
+            <li>Incorrect profiles</li>
+            <li>Conflicting configurations</li>
+            <li>Wrong test annotations</li>
+          </ul>
+
+          <h4>Debug strategy:</h4>
+          <ul>
+            <li>Narrow the test scope</li>
+            <li>Use the smallest possible annotation</li>
+            <li>Check logs for missing beans</li>
+            <li>Verify active profiles</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Warning</strong>
+            If context fails, logic has not even been tested yet.
+          </div>
+
+          <h2>12.3 Writing Testable Code</h2>
+
+          <h3>Dependency Injection</h3>
+          <p>Inject dependencies instead of creating them.</p>
+
+          <h4>❌ Bad</h4>
+          <pre><code>Service service = new Service();</code></pre>
+
+          <h4>✅ Good</h4>
+          <pre><code>public Service(Repository repo) {
+    this.repo = repo;
+}</code></pre>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            This enables mocking and isolation.
+          </div>
+
+          <h3>Single Responsibility</h3>
+          <p>Classes should do one thing well.</p>
+
+          <h4>Symptoms of poor SRP:</h4>
+          <ul>
+            <li>Too many dependencies</li>
+            <li>Hard-to-write tests</li>
+            <li>Excessive mocking</li>
+          </ul>
+
+          <div class="callout note">
+            <strong>Note</strong>
+            Good SRP leads to simpler tests and clearer logic.
+          </div>
+
+          <h3>Avoiding Hidden Dependencies</h3>
+          <p>Hidden dependencies include:</p>
+          <ul>
+            <li>Static calls</li>
+            <li>Singletons</li>
+            <li>System time</li>
+            <li>Environment variables</li>
+          </ul>
+
+          <p>These make tests unpredictable and hard to control.</p>
+
+          <h4>Refactor by:</h4>
+          <ul>
+            <li>Injecting abstractions</li>
+            <li>Wrapping static calls</li>
+            <li>Passing configuration explicitly</li>
+          </ul>
+
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const search = document.getElementById('search');
+    const sections = document.querySelectorAll('section');
+    const themeBtn = document.getElementById('theme');
+    const html = document.documentElement;
+
+    themeBtn.onclick = () => {
+      const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+    };
+
+    search.oninput = () => {
+      const q = search.value.toLowerCase();
+      sections.forEach(s => {
+        s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+      });
+    };
+  </script>
+</body>
+
+</html>
