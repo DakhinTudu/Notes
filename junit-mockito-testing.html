@@ -106,9 +106,24 @@
       gap: 10px;
     }
 
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-wrapper svg {
+      position: absolute;
+      left: 10px;
+      width: 14px;
+      height: 14px;
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
+
     header input {
-      width: 180px;
-      padding: 8px 12px;
+      width: 220px;
+      padding: 8px 12px 8px 32px;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       background: var(--bg-secondary);
@@ -283,25 +298,43 @@
         cursor: pointer;
         border-radius: 50%;
         text-align: center;
+        padding-left: 8px;
+        /* Reset padding for circular view */
       }
 
       header input::placeholder {
         color: transparent;
       }
 
-      header input:focus {
+      .search-wrapper svg {
+        left: 50%;
+        transform: translateX(-50%);
+        transition: all 0.3s ease;
+      }
+
+      .search-wrapper:focus-within {
         position: absolute;
         left: 10px;
         right: 10px;
         width: calc(100% - 20px);
         z-index: 1100;
-        border-radius: 6px;
-        text-align: left;
-        padding: 8px 12px;
-        background: var(--bg-color);
       }
 
-      header input:focus::placeholder {
+      .search-wrapper:focus-within input {
+        width: 100%;
+        border-radius: 6px;
+        text-align: left;
+        padding: 8px 12px 8px 32px;
+        background: var(--bg-color);
+        cursor: text;
+      }
+
+      .search-wrapper:focus-within svg {
+        left: 10px;
+        transform: none;
+      }
+
+      .search-wrapper:focus-within input::placeholder {
         color: var(--text-secondary);
       }
 
@@ -348,10 +381,17 @@
     <header>
       <div class="header-left">
         <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
-        <h1>Unit Testing — Java & Spring Boot</h1>
+        <h1>Unit Testing</h1>
       </div>
       <div class="header-actions">
-        <input id="search" placeholder="Search notes…" aria-label="Search">
+        <div class="search-wrapper">
+          <input id="search" placeholder="Search notes…" aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
         <button id="theme" title="Toggle Theme">◑</button>
       </div>
     </header>
