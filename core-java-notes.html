@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Java Notes — Master Guide</title>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --accent-color: #0366d6;
+            --code-bg: #f6f8fa;
+            --code-text: #24292e;
+            --note-bg: #e1f5fe;
+            --note-border: #0288d1;
+            --warning-bg: #fff3e0;
+            --warning-border: #ff9800;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            --mono-font: "SFMono-Regular", Consolas, Menlo, monospace;
+            --header-height: 60px;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0d1117;
+            --bg-secondary: #161b22;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --code-bg: #161b22;
+            --code-text: #e6edf3;
+            --note-bg: #1f3745;
+            --note-border: #58a6ff;
+            --warning-bg: #3d3018;
+            --warning-border: #d29922;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app {
+            display: grid;
+            grid-template-areas: "header header" "sidebar main";
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: var(--header-height) 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            grid-area: header;
+            position: sticky;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            z-index: 1000;
+        }
+
+        #menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0;
+            margin-right: 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1rem;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-wrapper svg {
+            position: absolute;
+            left: 10px;
+            width: 14px;
+            height: 14px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        header input {
+            width: 220px;
+            padding: 8px 12px 8px 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        header button#theme {
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav {
+            grid-area: sidebar;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px 0;
+            transition: transform 0.3s ease;
+            z-index: 900;
+        }
+
+        nav h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 0 20px;
+            margin: 16px 0 6px;
+        }
+
+        nav a {
+            display: block;
+            padding: 8px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        nav a:hover {
+            background: var(--bg-color);
+            color: var(--accent-color);
+        }
+
+        .nav-footer {
+            padding: 20px;
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .download-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .download-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        main {
+            grid-area: main;
+            overflow-y: auto;
+            padding: 40px 60px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        /* PDF Export Override Styles */
+        .print-only {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 25mm 20mm 30mm 20mm;
+            }
+
+            body {
+                background: white !important;
+                color: #111 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 11pt;
+            }
+
+            body::before {
+                content: "Daxin.dev Notes";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 80pt;
+                color: rgba(200, 200, 200, 0.1);
+                z-index: -1;
+                pointer-events: none;
+                white-space: nowrap;
+            }
+
+            .app {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            main {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                width: 100% !important;
+            }
+
+            /* Hide UI elements */
+            header,
+            nav,
+            #backdrop,
+            #theme,
+            .header-actions,
+            .nav-footer,
+            .download-btn {
+                display: none !important;
+            }
+
+            #content {
+                max-width: none !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            section {
+                page-break-inside: auto;
+                margin-bottom: 40px;
+                padding-top: 10px;
+            }
+
+            h1,
+            h2,
+            h3 {
+                color: #1e40af !important;
+                page-break-after: avoid;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+
+            h1 {
+                font-size: 32pt;
+                border-bottom: 5px solid #1e40af;
+                padding-bottom: 12px;
+                margin-top: 0;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            h2 {
+                font-size: 22pt;
+                color: #1d4ed8 !important;
+                border-left: 10px solid #1d4ed8;
+                padding-left: 15px;
+                padding-bottom: 4px;
+                margin-top: 40pt;
+                background: #f0f7ff;
+            }
+
+            p,
+            li {
+                font-size: 11.5pt;
+                line-height: 1.6;
+                color: #1f2937;
+            }
+
+            .callout {
+                page-break-inside: avoid;
+                border-radius: 12px !important;
+                padding: 18pt !important;
+                margin: 20pt 0 !important;
+                border: 1px solid #e5e7eb !important;
+                border-left-width: 8px !important;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+            }
+
+            .note {
+                background-color: #eff6ff !important;
+                border-left-color: #3b82f6 !important;
+                color: #1e3a8a !important;
+            }
+
+            .warning {
+                background-color: #fffbeb !important;
+                border-left-color: #f59e0b !important;
+                color: #78350f !important;
+            }
+
+            pre {
+                background-color: #111827 !important;
+                border: none !important;
+                padding: 15pt !important;
+                font-size: 10pt !important;
+                page-break-inside: avoid;
+                border-radius: 8px !important;
+                color: #e5e7eb !important;
+            }
+
+            code {
+                color: #d73a49 !important;
+                background: #fff5f5 !important;
+                padding: 2px 4px !important;
+                border-radius: 3px !important;
+                font-size: 0.95em !important;
+            }
+
+            details {
+                display: block !important;
+                border: 1px solid #e1e4e8 !important;
+                border-radius: 6px !important;
+                margin-bottom: 15pt !important;
+            }
+
+            summary {
+                background-color: #f6f8fa !important;
+                color: #0366d6 !important;
+                font-weight: bold !important;
+                padding: 10pt !important;
+                border-bottom: 1px solid #e1e4e8 !important;
+            }
+
+            .print-only {
+                display: block !important;
+                background: transparent;
+            }
+
+            .pdf-cover {
+                height: 240mm;
+                width: 100%;
+                display: flex !important;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                page-break-after: always;
+                background: #ffffff;
+                padding: 20mm;
+                border-right: 20mm solid #1e40af;
+                position: relative;
+                margin: 0 !important;
+            }
+
+            .pdf-cover h1 {
+                font-size: 48pt !important;
+                color: #1e40af !important;
+                margin: 0 0 15pt 0 !important;
+                border: none !important;
+                font-weight: 900;
+                letter-spacing: -2px;
+                line-height: 1.1;
+            }
+
+            .pdf-cover .subtitle {
+                font-size: 24pt;
+                color: #4b5563;
+                margin-bottom: 60pt;
+                font-weight: 300;
+                text-transform: uppercase;
+                letter-spacing: 3px;
+            }
+
+            .author-details {
+                background: #f3f4f6;
+                padding: 35pt;
+                border-radius: 20pt;
+                width: 100%;
+                max-width: 150mm;
+                border: 1px solid #e5e7eb;
+            }
+
+            .author-details p {
+                font-size: 20pt;
+                margin-bottom: 25pt;
+                color: #111827;
+                font-weight: 700;
+            }
+
+            .contact-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15pt;
+                text-align: left;
+            }
+
+            .contact-item {
+                font-size: 10pt;
+                color: #555;
+                display: flex;
+                align-items: center;
+                gap: 5pt;
+            }
+
+            .cover-footer {
+                margin-top: 60pt;
+                font-size: 11pt;
+                color: #0366d6;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+        }
+
+        code {
+            font-family: var(--mono-font);
+            color: var(--code-text);
+            font-size: 0.9em;
+        }
+
+        .callout {
+            padding: 16px;
+            border-left: 4px solid;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .note {
+            background: var(--note-bg);
+            border-color: var(--note-border);
+        }
+
+        .warning {
+            background: var(--warning-bg);
+            border-color: var(--warning-border);
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        details {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        summary {
+            padding: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--bg-secondary);
+        }
+
+        .details-body {
+            padding: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 850;
+            backdrop-filter: blur(2px);
+        }
+
+        @media (max-width: 768px) {
+            .app {
+                grid-template-areas: "header" "main";
+                grid-template-columns: 1fr;
+            }
+
+            #menu-toggle {
+                display: block;
+            }
+
+            header h1 {
+                font-size: 0.95rem;
+            }
+
+            header input {
+                width: 36px;
+                padding: 8px;
+                border-radius: 50%;
+                text-align: center;
+                padding-left: 8px;
+            }
+
+            header input::placeholder {
+                color: transparent;
+            }
+
+            .search-wrapper:focus-within {
+                position: absolute;
+                left: 10px;
+                right: 10px;
+                width: calc(100% - 20px);
+                z-index: 1100;
+            }
+
+            .search-wrapper:focus-within input {
+                width: 100%;
+                border-radius: 6px;
+                text-align: left;
+                padding: 8px 12px 8px 32px;
+            }
+
+            .search-wrapper:focus-within input::placeholder {
+                color: var(--text-secondary);
+            }
+
+            nav {
+                position: fixed;
+                left: 0;
+                top: var(--header-height);
+                bottom: 0;
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+                border-right: 1px solid var(--border-color);
+            }
+
+            .sidebar-open nav {
+                transform: translateX(0);
+            }
+
+            .sidebar-open #backdrop {
+                display: block;
+            }
+
+            main {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-only pdf-cover">
+        <div class="cover-content">
+            <h1>Core Java Notes</h1>
+            <p class="subtitle">Java & OOP Principles — Master Guide</p>
+            <div class="author-details">
+                <p>By <strong>Dakhin Tudu</strong></p>
+                <div class="contact-grid">
+                    <div class="contact-item">📧 dtudu195@gmail.com</div>
+                    <div class="contact-item">🌐 portfolio-daxin.netlify.app</div>
+                    <div class="contact-item">🔗 github.com/DakhinTudu</div>
+                    <div class="contact-item">💼 linkedin.com/in/dakhin-tudu-b3550821b/</div>
+                </div>
+            </div>
+            <div class="cover-footer">
+                Daxin.dev Notes — Premium Learning Resource
+            </div>
+        </div>
+    </div>
+    <div id="backdrop"></div>
+    <div class="app">
+        <header>
+            <div class="header-left">
+                <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
+                <h1>Core Java</h1>
+            </div>
+            <div class="header-actions">
+                <div class="search-wrapper">
+                    <input id="search" placeholder="Search notes…" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <button id="theme" title="Toggle Theme">◑</button>
+            </div>
+        </header>
+
+        <nav>
+            <h2>Fundamentals</h2>
+            <a href="#m1">Module 1: Basics</a>
+            <a href="#m2">Module 2: Control Flow</a>
+            <h2>OOP & Core</h2>
+            <a href="#m3">Module 3: OOP Principles</a>
+            <a href="#m4">Module 4: Abstraction</a>
+            <a href="#m5">Module 5: Strings</a>
+            <a href="#m6">Module 6: Arrays</a>
+            <a href="#m7">Module 7: Wrappers</a>
+            <a href="#m8">Module 8: Exceptions</a>
+            <h2>Advanced Core</h2>
+            <a href="#m9">Module 9: Multithreading</a>
+            <a href="#m10">Module 10: Collections</a>
+            <a href="#m11">Module 11: Generics</a>
+            <a href="#m12">Module 12: File I/O</a>
+            <a href="#m13">Module 13: Java 8</a>
+            <h2>Deep Dives</h2>
+            <a href="#m14">Module 14: Inner Classes</a>
+            <a href="#m15">Module 15: Reflection</a>
+            <a href="#m16">Module 16: JVM</a>
+            <a href="#m17">Module 17: Misc</a>
+
+            <div class="nav-footer">
+                <button id="download-pdf" class="download-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download PDF
+                </button>
+            </div>
+        </nav>
+
+        <main>
+            <div class="content" id="content">
+
+                <section id="m1">
+                    <h1>Module 1: Java Basics & Fundamentals</h1>
+                    <ul>
+                        <li>History of Java</li>
+                        <li>Features of Java</li>
+                        <li>JVM, JRE, JDK (architecture & differences)</li>
+                        <li>Java Program Structure</li>
+                        <li>main() method</li>
+                        <li>Compilation & Execution flow</li>
+                        <li>Data Types (Primitive & Non-Primitive)</li>
+                        <li>Variables (local, instance, static)</li>
+                        <li>Type Casting (implicit, explicit)</li>
+                        <li>Operators (arithmetic, relational, logical, bitwise, ternary)</li>
+                        <li>Keywords & Identifiers</li>
+                        <li>Comments</li>
+                        <li>Unicode & Naming Conventions</li>
+                    </ul>
+                </section>
+
+                <section id="m2">
+                    <h1>Module 2: Control Flow Statements</h1>
+                    <ul>
+                        <li>If / If-Else</li>
+                        <li>Nested If</li>
+                        <li>Switch Case (rules, fall-through)</li>
+                        <li>Loops (for, while, do-while, enhanced for)</li>
+                        <li>Loop Control Statements (break, continue, return)</li>
+                    </ul>
+                </section>
+
+                <section id="m3">
+                    <h1>Module 3: Object-Oriented Programming (OOP)</h1>
+                    <ul>
+                        <li>OOP Principles (Encapsulation, Inheritance, Polymorphism, Abstraction)</li>
+                        <li>Class & Object</li>
+                        <li>Constructors</li>
+                        <li>this keyword</li>
+                        <li>static keyword</li>
+                        <li>Inheritance types</li>
+                        <li>Method Overloading & Overriding</li>
+                        <li>super keyword</li>
+                        <li>Dynamic Method Dispatch</li>
+                        <li>final keyword</li>
+                        <li>Object class methods (toString, equals, hashCode, etc.)</li>
+                    </ul>
+
+                    <h2>3.1 Core Concepts Deep Dive: Cohesion & Binding</h2>
+                    <p>This section explores the fundamental mechanics that enable Polymorphism and robust design.</p>
+
+                    <h3>1️⃣ Cohesion (Design Foundation)</h3>
+                    <p>
+                        <strong>What is Cohesion?</strong><br>
+                        Cohesion measures how strongly related the responsibilities of a class or method are.
+                    </p>
+                    <ul>
+                        <li><strong>High cohesion</strong> = one class does one job well.</li>
+                        <li><strong>Low cohesion</strong> = one class does many unrelated things.</li>
+                    </ul>
+
+                    <h4>❌ Low Cohesion (Bad)</h4>
+                    <pre><code>class UserService {
+    void login() {}
+    void generatePDF() {}
+    void sendEmail() {}
+    void connectToDatabase() {}
+}</code></pre>
+                    <div class="callout warning">
+                        <strong>Problems</strong>
+                        Hard to maintain, changes ripple everywhere, and difficult testing.
+                    </div>
+
+                    <h4>✅ High Cohesion (Good)</h4>
+                    <pre><code>class AuthService {
+    void login() {}
+    void logout() {}
+}
+
+class EmailService {
+    void sendEmail() {}
+}</code></pre>
+                    <div class="callout note">
+                        <strong>Benefits</strong>
+                        Easier maintenance, clear responsibility, reusable & testable.
+                    </div>
+
+                    <h3>2️⃣ Binding (Core Execution Concept)</h3>
+                    <p><strong>Binding</strong> = connecting a method call to the method implementation.</p>
+                    <pre><code>obj.method();  // which method body?</code></pre>
+
+                    <h4>1. Static Binding (Compile-Time / Early Binding)</h4>
+                    <ul>
+                        <li>Bound before execution, during compilation.</li>
+                        <li>Happens with: <strong>static</strong>, <strong>final</strong>, <strong>private</strong>
+                            methods, and <strong>Method Overloading</strong>.</li>
+                    </ul>
+                    <pre><code>class A {
+    static void show() { System.out.println("A"); }
+}
+A.show(); // Compiler knows exactly what to call</code></pre>
+
+                    <h4>2. Dynamic Binding (Runtime / Late Binding)</h4>
+                    <ul>
+                        <li>Bound during execution.</li>
+                        <li>Happens with: <strong>Method Overriding</strong> and <strong>Parent reference → Child
+                                object</strong>.</li>
+                    </ul>
+                    <pre><code>class A {
+    void show() { System.out.println("A"); }
+}
+class B extends A {
+    void show() { System.out.println("B"); }
+}
+
+A obj = new B();
+obj.show();  // B.show() -> JVM decides at runtime</code></pre>
+
+                    <div class="callout note">
+                        <strong>Key Rule</strong>
+                        Methods are bound using the <strong>object type</strong>, not the reference type (except
+                        static/private/final).
+                    </div>
+
+                    <h3>3️⃣ Binding Consequence #1: Polymorphism</h3>
+                    <p>One interface, many implementations. Example: <code>A obj = new B();</code></p>
+
+                    <h4>Compile-time vs Runtime Polymorphism</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Mechanism</th>
+                                <th>Binding</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Compile-time</td>
+                                <td>Overloading</td>
+                                <td>Static</td>
+                            </tr>
+                            <tr>
+                                <td>Runtime</td>
+                                <td>Overriding</td>
+                                <td>Dynamic</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>JVM Insight (Intermediate+)</h4>
+                    <ul>
+                        <li>JVM uses a <strong>Virtual Method Table (V-Table)</strong>.</li>
+                        <li>Object holds method references.</li>
+                        <li>Overridden method replaces parent entry.</li>
+                    </ul>
+
+                    <h3>4️⃣ Binding Consequence #2: Method Resolution</h3>
+                    <p>How Java resolves a method call:</p>
+                    <ol>
+                        <li><strong>Compiler</strong> checks method existence using <strong>reference type</strong>.
+                        </li>
+                        <li><strong>JVM</strong> checks overridden version using <strong>object type</strong>.</li>
+                        <li>Final method body executes.</li>
+                    </ol>
+
+                    <h3>5️⃣ Binding Consequence #3: Variable Resolution</h3>
+                    <div class="callout warning">
+                        <strong>Critical</strong>
+                        Variables are <strong>NOT</strong> polymorphic.
+                    </div>
+                    <pre><code>class A { int x = 10; }
+class B extends A { int x = 20; }
+
+A obj = new B();
+System.out.println(obj.x); // Output: 10</code></pre>
+                    <p><strong>Why?</strong> Variables use reference type. No overriding. Compile-time resolution only.
+                    </p>
+
+                    <h3>6️⃣ Type Casting</h3>
+                    <p>Exists because Reference type and Object type are different.</p>
+
+                    <h4>1. Upcasting (Safe, implicit)</h4>
+                    <pre><code>A obj = new B(); // Child → Parent</code></pre>
+
+                    <h4>2. Downcasting (Unsafe, explicit)</h4>
+                    <pre><code>B obj = (B) new A(); // ❌ Runtime Error (ClassCastException)
+
+// Safe Downcasting
+if (obj instanceof B) {
+    B b = (B) obj;
+}</code></pre>
+                    <div class="callout note">
+                        <strong>Note</strong>
+                        Casting does NOT change the object. It only tells the compiler to treat the reference as a
+                        specific type.
+                    </div>
+
+                    <h3>7️⃣ Master-Level Mental Model</h3>
+                    <ul>
+                        <li><strong>Reference Type</strong> → compiler rules</li>
+                        <li><strong>Object Type</strong> → runtime behavior</li>
+                        <li><strong>Method Type</strong> → binding decision</li>
+                    </ul>
+
+                    <div class="callout note">
+                        <strong>Interview One-liners</strong>
+                        <ul>
+                            <li>“Java achieves runtime polymorphism through dynamic binding.”</li>
+                            <li>“Static methods are resolved using reference type.”</li>
+                            <li>“Variables do not participate in polymorphism.”</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="m4">
+                    <h1>Module 4: Abstraction & Interfaces</h1>
+                    <ul>
+                        <li>Abstract Classes & Methods</li>
+                        <li>Interfaces</li>
+                        <li>Multiple Inheritance via Interface</li>
+                        <li>Functional Interfaces</li>
+                        <li>Default & Static methods in Interface</li>
+                        <li>Marker Interfaces (Serializable, Cloneable)</li>
+                        <li>Difference between Abstract Class & Interface</li>
+                    </ul>
+                </section>
+
+                <section id="m5">
+                    <h1>Module 5: Strings</h1>
+                    <ul>
+                        <li>String class & String Pool</li>
+                        <li>Immutability of String</li>
+                        <li>String, StringBuilder, StringBuffer</li>
+                        <li>String methods</li>
+                        <li>equals() vs ==</li>
+                        <li>Performance comparison</li>
+                    </ul>
+                </section>
+
+                <section id="m6">
+                    <h1>Module 6: Arrays</h1>
+                    <ul>
+                        <li>One-Dimensional & Multi-Dimensional Arrays</li>
+                        <li>Array Initialization & Traversal</li>
+                        <li>Anonymous Arrays</li>
+                        <li>Arrays utility class</li>
+                        <li>Array vs Collection</li>
+                    </ul>
+                </section>
+
+                <section id="m7">
+                    <h1>Module 7: Wrapper Classes</h1>
+                    <ul>
+                        <li>Wrapper Classes Overview</li>
+                        <li>Autoboxing & Unboxing</li>
+                        <li>Primitive vs Wrapper</li>
+                        <li>ValueOf & Parse methods</li>
+                    </ul>
+                </section>
+
+                <section id="m8">
+                    <h1>Module 8: Exception Handling</h1>
+                    <ul>
+                        <li>Types of Exceptions (Checked, Unchecked, Errors)</li>
+                        <li>try-catch-finally</li>
+                        <li>Multiple catch blocks & Nested try</li>
+                        <li>throw vs throws</li>
+                        <li>Custom Exceptions</li>
+                        <li>Exception Propagation</li>
+                        <li>Best Practices</li>
+                    </ul>
+                </section>
+
+                <section id="m9">
+                    <h1>Module 9: Multithreading</h1>
+                    <ul>
+                        <li>Thread Lifecycle</li>
+                        <li>Creating Thread (Extending Thread vs Implementing Runnable)</li>
+                        <li>Thread methods</li>
+                        <li>Synchronization & Inter-Thread Communication</li>
+                        <li>Deadlock</li>
+                        <li>Daemon Thread</li>
+                        <li>Thread Priority</li>
+                        <li>volatile keyword</li>
+                        <li>wait(), notify(), notifyAll()</li>
+                    </ul>
+                </section>
+
+                <section id="m10">
+                    <h1>Module 10: Collections Framework</h1>
+                    <ul>
+                        <li>Collection Hierarchy</li>
+                        <li>List Interface (ArrayList, LinkedList, Vector, Stack)</li>
+                        <li>Set Interface (HashSet, LinkedHashSet, TreeSet)</li>
+                        <li>Queue Interface (PriorityQueue, Deque)</li>
+                        <li>Map Interface (HashMap, LinkedHashMap, TreeMap, Hashtable)</li>
+                        <li>Iterator & ListIterator</li>
+                        <li>Comparable vs Comparator</li>
+                        <li>Collections Utility Class</li>
+                        <li>Fail-fast vs Fail-safe</li>
+                    </ul>
+                </section>
+
+                <section id="m11">
+                    <h1>Module 11: Generics</h1>
+                    <ul>
+                        <li>Generic Classes & Methods</li>
+                        <li>Bounded Types</li>
+                        <li>Wildcards (? extends, ? super)</li>
+                        <li>Type Erasure</li>
+                        <li>Advantages of Generics</li>
+                    </ul>
+                </section>
+
+                <section id="m12">
+                    <h1>Module 12: File Handling & I/O</h1>
+                    <ul>
+                        <li>File Class</li>
+                        <li>Byte Streams, Character Streams, Buffered Streams</li>
+                        <li>Serialization & Deserialization</li>
+                        <li>Transient keyword</li>
+                        <li>try-with-resources</li>
+                    </ul>
+                </section>
+
+                <section id="m13">
+                    <h1>Module 13: Java 8 Features (Core Level)</h1>
+                    <ul>
+                        <li>Lambda Expressions</li>
+                        <li>Functional Interfaces</li>
+                        <li>Method References</li>
+                        <li>Stream API</li>
+                        <li>Optional Class</li>
+                        <li>forEach</li>
+                        <li>Default Methods</li>
+                        <li>Date & Time API</li>
+                    </ul>
+                </section>
+
+                <section id="m14">
+                    <h1>Module 14: Inner Classes</h1>
+                    <ul>
+                        <li>Static Nested Classes</li>
+                        <li>Non-Static Inner Classes</li>
+                        <li>Local Inner Classes</li>
+                        <li>Anonymous Inner Classes</li>
+                    </ul>
+                </section>
+
+                <section id="m15">
+                    <h1>Module 15: Reflection API</h1>
+                    <ul>
+                        <li>Reflection Overview</li>
+                        <li>Class Class</li>
+                        <li>Getting metadata & Accessing private members</li>
+                        <li>Use cases & risks</li>
+                    </ul>
+                </section>
+
+                <section id="m16">
+                    <h1>Module 16: JVM & Memory Management</h1>
+                    <ul>
+                        <li>JVM Architecture & Class Loader</li>
+                        <li>Memory Areas (Heap, Stack, Method Area)</li>
+                        <li>Garbage Collection & GC Algorithms</li>
+                        <li>Memory Leaks</li>
+                        <li>finalize() (legacy behavior)</li>
+                    </ul>
+                </section>
+
+                <section id="m17">
+                    <h1>Module 17: Miscellaneous Core Topics</h1>
+                    <ul>
+                        <li>enum</li>
+                        <li>var (Java 10 – optional awareness)</li>
+                        <li>Assertions</li>
+                        <li>Annotations (built-in)</li>
+                        <li>Cloning (Shallow vs Deep Copy)</li>
+                        <li>transient vs static</li>
+                    </ul>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const search = document.getElementById('search');
+        const sections = document.querySelectorAll('section');
+        const themeBtn = document.getElementById('theme');
+        const menuToggle = document.getElementById('menu-toggle');
+        const backdrop = document.getElementById('backdrop');
+        const navLinks = document.querySelectorAll('nav a');
+        const downloadBtn = document.getElementById('download-pdf');
+        const html = document.documentElement;
+        const body = document.body;
+
+        // Theme Toggle
+        themeBtn.onclick = () => {
+            const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', t);
+        };
+
+        // Sidebar Toggle
+        const toggleSidebar = () => {
+            body.classList.toggle('sidebar-open');
+        };
+
+        menuToggle.onclick = toggleSidebar;
+        backdrop.onclick = toggleSidebar;
+
+        // Close sidebar when clicking a link (mobile)
+        navLinks.forEach(link => {
+            link.onclick = () => {
+                if (window.innerWidth <= 768) {
+                    body.classList.remove('sidebar-open');
+                }
+            };
+        });
+
+        // Search Filtering
+        search.oninput = () => {
+            const q = search.value.toLowerCase();
+            sections.forEach(s => {
+                s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+            });
+        };
+
+        // PDF Export via Print
+        downloadBtn.onclick = () => {
+            const allDetails = document.querySelectorAll('details');
+            const originalDetailsState = Array.from(allDetails).map(d => d.open);
+            const searchVal = search.value;
+
+            // Expand all content
+            search.value = '';
+            sections.forEach(s => s.classList.remove('hidden'));
+            allDetails.forEach(d => d.open = true);
+
+            // Trigger Print
+            window.print();
+
+            // Restore State
+            setTimeout(() => {
+                allDetails.forEach((d, i) => d.open = originalDetailsState[i]);
+                if (searchVal) {
+                    search.value = searchVal;
+                    search.oninput();
+                }
+            }, 500);
+        };
+    </script>
+</body>
+
+</html>
