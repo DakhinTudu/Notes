@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 1 • Module 1 — Internet & Web Fundamentals</title>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --accent-color: #0366d6;
+            --code-bg: #f6f8fa;
+            --code-text: #24292e;
+            --note-bg: #e1f5fe;
+            --note-border: #0288d1;
+            --warning-bg: #fff3e0;
+            --warning-border: #ff9800;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            --mono-font: "SFMono-Regular", Consolas, Menlo, monospace;
+            --header-height: 60px;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0d1117;
+            --bg-secondary: #161b22;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --code-bg: #161b22;
+            --code-text: #e6edf3;
+            --note-bg: #1f3745;
+            --note-border: #58a6ff;
+            --warning-bg: #3d3018;
+            --warning-border: #d29922;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app {
+            display: grid;
+            grid-template-areas: "header header" "sidebar main";
+            grid-template-columns: var(--sidebar-width) 1fr;
+            grid-template-rows: var(--header-height) 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            grid-area: header;
+            position: sticky;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            z-index: 1000;
+        }
+
+        #menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0;
+            margin-right: 15px;
+        }
+
+        .header-left { display: flex; align-items: center; }
+
+        header h1 {
+            font-size: 1rem;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+
+        .search-wrapper svg {
+            position: absolute;
+            left: 10px;
+            width: 14px;
+            height: 14px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        header input {
+            width: 220px;
+            padding: 8px 12px 8px 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        header button#theme {
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav {
+            grid-area: sidebar;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px 0;
+            transition: transform 0.3s ease;
+            z-index: 900;
+        }
+
+        nav h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            padding: 0 20px;
+            margin: 16px 0 6px;
+        }
+
+        nav a {
+            display: block;
+            padding: 8px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+
+        nav a:hover {
+            background: var(--bg-color);
+            color: var(--accent-color);
+        }
+
+        .nav-footer {
+            padding: 20px;
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .download-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .download-btn:hover { opacity: 0.9; }
+
+        .download-btn svg { width: 16px; height: 16px; }
+
+        main {
+            grid-area: main;
+            overflow-y: auto;
+            padding: 40px 60px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            margin-top: 3rem;
+        }
+
+        h3 { font-size: 1.25rem; margin-top: 2rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        th { background: var(--bg-secondary); }
+
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.92rem;
+        }
+
+        code {
+            font-family: var(--mono-font);
+            color: var(--code-text);
+            background: var(--code-bg);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .callout {
+            padding: 16px;
+            border-left: 5px solid;
+            border-radius: 6px;
+            margin: 24px 0;
+        }
+
+        .note   { background: var(--note-bg);   border-color: var(--note-border); }
+        .warning { background: var(--warning-bg); border-color: var(--warning-border); }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.4px;
+        }
+
+        details {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--bg-secondary);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .details-body { padding: 16px; }
+
+        .hidden { display: none !important; }
+
+        #backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 850;
+            backdrop-filter: blur(2px);
+        }
+
+        @media (max-width: 768px) {
+            .app { grid-template-areas: "header" "main"; grid-template-columns: 1fr; }
+            #menu-toggle { display: block; }
+            header input { width: 36px; padding-left: 8px; text-align: center; border-radius: 50%; }
+            .search-wrapper:focus-within { position: absolute; inset-inline: 10px; width: auto; z-index: 1100; }
+            nav {
+                position: fixed;
+                inset-block: var(--header-height) 0;
+                inset-inline-start: 0;
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar-open nav { transform: translateX(0); }
+            .sidebar-open #backdrop { display: block; }
+            main { padding: 20px 15px; }
+        }
+
+        /* ────────────────────────────────────────────────
+           PRINT / PDF STYLES (premium look)
+        ──────────────────────────────────────────────── */
+        .print-only { display: none; }
+
+        @media print {
+            @page { size: A4; margin: 25mm 20mm 30mm 20mm; }
+            body {
+                background: white !important;
+                color: #111 !important;
+                font-size: 11pt;
+            }
+            body::before {
+                content: "Daxin.dev Notes — Phase 1";
+                position: fixed;
+                inset: 50% auto auto 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 80pt;
+                color: rgba(200,200,200,0.08);
+                pointer-events: none;
+                white-space: nowrap;
+            }
+            .app, main { display: block !important; overflow: visible !important; height: auto !important; }
+            header, nav, #backdrop, #theme, .header-actions, .nav-footer, .download-btn { display: none !important; }
+            .content { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+            section { page-break-inside: auto; margin-bottom: 36pt; }
+            h1 {
+                font-size: 32pt !important;
+                color: #1e40af !important;
+                border-bottom: 5px solid #1e40af;
+                padding-bottom: 12px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            h2 {
+                font-size: 22pt !important;
+                color: #1d4ed8 !important;
+                border-left: 10px solid #1d4ed8;
+                background: #f0f7ff;
+                padding: 8px 16px;
+                margin-top: 40pt;
+            }
+            .callout {
+                border-radius: 8px !important;
+                padding: 18pt !important;
+                border: 1px solid #e5e7eb !important;
+                border-left-width: 8px !important;
+                page-break-inside: avoid;
+            }
+            .note   { background: #eff6ff !important; border-left-color: #3b82f6 !important; color: #1e3a8a !important; }
+            .warning { background: #fffbeb !important; border-left-color: #f59e0b !important; color: #78350f !important; }
+            pre {
+                background: #0d1117 !important;
+                color: #e6edf3 !important;
+                padding: 16pt !important;
+                border-radius: 8px;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-only pdf-cover">
+        <div class="cover-content">
+            <h1>Foundations of Backend Systems</h1>
+            <p class="subtitle">Phase 1 • Module 1 — Internet & Web Fundamentals</p>
+            <div class="author-details">
+                <p>By <strong>Dakhin Tudu</strong></p>
+                <div class="contact-grid">
+                    <div class="contact-item">📧 dtudu195@gmail.com</div>
+                    <div class="contact-item">🌐 portfolio-daxin.netlify.app</div>
+                    <div class="contact-item">🔗 github.com/DakhinTudu</div>
+                    <div class="contact-item">💼 linkedin.com/in/dakhin-tudu-b3550821b/</div>
+                </div>
+            </div>
+            <div class="cover-footer">
+                Daxin.dev Notes — Premium Learning Resource
+            </div>
+        </div>
+    </div>
+
+    <div id="backdrop"></div>
+    <div class="app">
+
+        <header>
+            <div class="header-left">
+                <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
+                <h1>Internet & Web Fundamentals</h1>
+            </div>
+            <div class="header-actions">
+                <div class="search-wrapper">
+                    <input id="search" placeholder="Search notes…" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <button id="theme" title="Toggle Theme">◑</button>
+            </div>
+        </header>
+
+        <nav>
+            <h2>Phase 1 — Foundations</h2>
+            <a href="#intro">Introduction & Request Journey</a>
+            <a href="#dns">1.1 DNS Resolution</a>
+            <a href="#http">1.2 HTTP Protocol Deep Dive</a>
+            <a href="#https">1.3 HTTPS & TLS</a>
+            <a href="#summary">Key Takeaways & Production Mindset</a>
+
+            <div class="nav-footer">
+                <button id="download-pdf" class="download-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download PDF
+                </button>
+            </div>
+        </nav>
+
+        <main>
+            <div class="content" id="content">
+
+                <section id="intro">
+                    <h1>Module 1 — Internet & Web Fundamentals</h1>
+                    <p><strong>Goal:</strong> Understand exactly what happens between a user typing a URL and your Spring Boot controller method being invoked.</p>
+
+                    <div class="callout note">
+                        <strong>Why this module matters for backend engineers</strong><br>
+                        70–80% of production incidents and performance problems occur <strong>before</strong> your code even starts executing.
+                    </div>
+
+                    <h2>Typical modern request journey (2025–2026)</h2>
+                    <pre><code>Browser / Mobile App
+   ↓ (HTTPS)
+DNS resolution (local cache → recursive resolver → authoritative)
+   ↓
+Anycast / Global routing
+   ↓
+Edge / CDN (Cloudflare, Fastly, Akamai, CloudFront)
+   ↓
+Layer 7 Load Balancer (ALB, NLB, Envoy, nginx, Traefik)
+   ↓
+TLS termination (usually here)
+   ↓
+HTTP/2 or HTTP/3 → Application Server (Tomcat / Undertow / Netty)
+   ↓
+Spring Boot @RestController
+   ↓
+Service layer → Redis / DB / Kafka / gRPC / external HTTP</code></pre>
+
+                    <div class="callout warning">
+                        <strong>Very common production failure locations (ranked by frequency):</strong>
+                        <ol>
+                            <li>DNS propagation / caching issues</li>
+                            <li>TLS certificate misconfiguration / expiry / chain problems</li>
+                            <li>CDN / edge cache poisoning or stale content</li>
+                            <li>Load balancer health-check misconfiguration</li>
+                            <li>Connection pool exhaustion (backend side)</li>
+                        </ol>
+                    </div>
+                </section>
+
+
+                <section id="dns">
+                    <h1>1.1 DNS Resolution</h1>
+
+                    <p>DNS = Domain Name System<br>
+                    Translates human-friendly names (<code>api.myapp.com</code>) into IP addresses (<code>3.124.89.210</code> or <code>2600:1f18:abcd::1</code>).</p>
+
+                    <h2>Modern DNS lookup steps (realistic order)</h2>
+                    <ol>
+                        <li>Browser internal DNS cache</li>
+                        <li>Operating system DNS cache (<code>systemd-resolved</code> / Windows / macOS mDNS)</li>
+                        <li>Local recursive resolver (<code>8.8.8.8</code>, <code>1.1.1.1</code>, ISP, <code>dns.adguard.com</code>, …)</li>
+                        <li>Root servers (13 logical clusters, hundreds of anycast instances)</li>
+                        <li>TLD servers (<code>.com</code>, <code>.io</code>, <code>.dev</code>, …)</li>
+                        <li>Authoritative nameservers (Cloudflare, Route 53, NS1, Vercel, …)</li>
+                        <li>Response + caching everywhere with TTL</li>
+                    </ol>
+
+                    <h3>Most important DNS record types (2025)</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Type</th><th>Purpose</th><th>Typical TTL</th><th>Example</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>A</td><td>IPv4 address</td><td>300–3600</td><td>api → 3.124.89.210</td></tr>
+                            <tr><td>AAAA</td><td>IPv6 address</td><td>300–3600</td><td>api → 2600:1f18:abcd::1</td></tr>
+                            <tr><td>CNAME</td><td>Alias (not at apex)</td><td>60–300</td><td>api-v2 → api.myapp.com</td></tr>
+                            <tr><td>ALIAS / ANAME</td><td>CNAME-like at apex zone</td><td>60–300</td><td>myapp.com → d1111.cloudfront.net</td></tr>
+                            <tr><td>TXT</td><td>SPF, DKIM, DMARC, verification</td><td>3600+</td><td>"v=spf1 include:_spf.google.com ~all"</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout warning">
+                        <strong>TTL is the most dangerous DNS setting</strong><br>
+                        High TTL (86400 = 24 h) → very slow propagation during fail-over, migration, blue-green switch.<br>
+                        <strong>Recommended ritual before DNS change:</strong> lower TTL to 60–300 s at least 24 h in advance.
+                    </div>
+
+                    <details>
+                        <summary>Useful diagnostic commands (copy-paste friendly)</summary>
+                        <div class="details-body">
+<pre><code># Quick lookup
+nslookup api.myapp.com 8.8.8.8
+
+# Full resolution path + timing
+dig +trace api.myapp.com
+
+# Show authoritative servers only
+dig +short NS myapp.com
+
+# Flush caches (common "it works now" fix)
+# macOS
+sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+
+# Ubuntu / Debian
+sudo systemd-resolve --flush-caches
+
+# Windows (cmd as admin)
+ipconfig /flushdns</code></pre>
+                        </div>
+                    </details>
+                </section>
+
+
+                <section id="http">
+                    <h1>1.2 HTTP Protocol Deep Dive</h1>
+
+                    <h2>Typical HTTP/2 request (what Spring Boot sees)</h2>
+                    <pre><code>GET /api/cases/38471?sort=createdAt,desc&page=2 HTTP/2
+Host: api.myapp.com
+authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+accept: application/json
+accept-encoding: gzip, deflate, br
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) ...
+x-request-id: req-7d9f2a1b3c4e5f6789012345
+traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01</code></pre>
+
+                    <h3>HTTP Methods – REST semantics & idempotency</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Method</th><th>Idempotent</th><th>Safe</th><th>Main use case</th><th>Retry safe?</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>GET</td><td>Yes</td><td>Yes</td><td>Read</td><td>Yes</td></tr>
+                            <tr><td>HEAD</td><td>Yes</td><td>Yes</td><td>Metadata only</td><td>Yes</td></tr>
+                            <tr><td>PUT</td><td>Yes</td><td>No</td><td>Replace / upsert</td><td>Yes</td></tr>
+                            <tr><td>DELETE</td><td>Yes</td><td>No</td><td>Remove</td><td>Yes (if 404 ok)</td></tr>
+                            <tr><td>POST</td><td>No</td><td>No</td><td>Create, actions</td><td>No</td></tr>
+                            <tr><td>PATCH</td><td>*Depends</td><td>No</td><td>Partial update</td><td>*Depends</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3>Important HTTP headers – backend engineer perspective</h3>
+                    <ul>
+                        <li><code>Idempotency-Key</code> / <code>Idempotency-Token</code> — prevents duplicate POSTs</li>
+                        <li><code>If-Match</code> / <code>If-None-Match</code> — optimistic concurrency control</li>
+                        <li><code>Content-Type</code>, <code>Accept</code></li>
+                        <li><code>X-Request-ID</code>, <code>Traceparent</code> — distributed tracing (OpenTelemetry)</li>
+                        <li><code>Forwarded</code>, <code>X-Forwarded-For</code>, <code>X-Forwarded-Proto</code></li>
+                    </ul>
+
+                    <h2>HTTP versions comparison (2025–2026 relevance)</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Version</th><th>Transport</th><th>Multiplexing</th><th>Header Compression</th><th>0-RTT</th><th>Head-of-line blocking</th><th>Backend support in Spring Boot</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>HTTP/1.1</td><td>TCP</td><td>No</td><td>No</td><td>No</td><td>Yes (per connection)</td><td>Default in Tomcat</td></tr>
+                            <tr><td>HTTP/2</td><td>TCP</td><td>Yes</td><td>HPACK</td><td>No</td><td>Only on TCP level</td><td>Tomcat 9+, Undertow, Netty</td></tr>
+                            <tr><td>HTTP/3</td><td>QUIC (UDP)</td><td>Yes</td><td>QPACK</td><td>Yes</td><td>Greatly reduced</td><td>Spring Boot 3.2+ (experimental)</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout note">
+                        <strong>2025–2026 recommendation</strong><br>
+                        Serve HTTP/2 by default.<br>
+                        Enable HTTP/3 where possible (especially mobile-first APIs).
+                    </div>
+                </section>
+
+
+                <section id="https">
+                    <h1>1.3 HTTPS & TLS (2025 view)</h1>
+
+                    <h2>TLS 1.3 handshake – simplified</h2>
+                    <ol>
+                        <li>ClientHello (supported versions, ciphers, random, extensions: ALPN, SNI, key share)</li>
+                        <li>ServerHello + Certificate + Finished</li>
+                        <li>Client Finished</li>
+                        <li>Application data (encrypted)</li>
+                    </ol>
+
+                    <div class="callout note">
+                        <strong>TLS 1.3 advantages (why everyone moved)</strong>
+                        <ul>
+                            <li>1-RTT handshake (faster than TLS 1.2)</li>
+                            <li>Only 5 ciphers (much simpler & more secure)</li>
+                            <li>Mandatory forward secrecy</li>
+                            <li>Encrypted SNI possible (ECH – in progress 2025)</li>
+                        </ul>
+                    </div>
+
+                    <h3>Common TLS termination patterns in 2025</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Location</th><th>Pros</th><th>Cons</th><th>Typical users</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Edge/CDN (Cloudflare, Fastly)</td><td>Global anycast, WAF, caching</td><td>Less control</td><td>Almost everyone</td></tr>
+                            <tr><td>Load Balancer (ALB, NLB, GCP LB)</td><td>Centralized cert management</td><td>CPU overhead on LB</td><td>Most serious backends</td></tr>
+                            <tr><td>Application (Spring Boot)</td><td>End-to-end encryption, mTLS</td><td>CPU cost, cert management</td><td>Service mesh, zero-trust</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+
+                <section id="summary">
+                    <h1>Key Takeaways & Production Mindset</h1>
+
+                    <div class="callout note">
+                        After completing this module you should be comfortable explaining:
+                        <ul>
+                            <li>DNS resolution path and why TTL matters so much</li>
+                            <li>Differences between HTTP/1.1, /2 and /3 (practical impact)</li>
+                            <li>What actually happens during a modern TLS 1.3 handshake</li>
+                            <li>Where TLS is usually terminated — and trade-offs</li>
+                            <li>Most common production failure modes at DNS / TLS / LB layers</li>
+                        </ul>
+                    </div>
+
+                    <p><strong>Next modules in Phase 1 will cover:</strong></p>
+                    <ul>
+                        <li>TCP & connection management</li>
+                        <li>Load balancing deep dive</li>
+                        <li>CDN & caching fundamentals</li>
+                        <li>Observability basics (request tracing, metrics)</li>
+                    </ul>
+                </section>
+
+
+
+                <section id="intro">
+          <h1>Module 1 — Java & Spring Boot Internals</h1>
+          <p><strong>Goal:</strong> Understand how your Spring Boot backend actually processes requests and what happens inside the JVM.</p>
+
+          <div class="callout note">
+            <strong>High-level request flow (typical production setup)</strong>
+          </div>
+
+          <pre><code>Client ── HTTPS ──► Load Balancer / CDN Edge
+                              │
+                              ▼
+                       Application Server
+                              │
+                              ▼
+                         Tomcat (embedded)
+                              │
+                              ▼
+                   DispatcherServlet (Spring MVC)
+                              │
+                 ┌────────────┼────────────┐
+                 ▼            ▼            ▼
+          Controller → Service → Repository
+                              │
+                              ▼
+                          Database
+                              │
+                 (Redis / Cache / Message Broker)</code></pre>
+
+          <p>Each layer has a clear responsibility — understanding them helps you debug latency, thread starvation, GC pauses, and connection issues.</p>
+        </section>
+
+
+        <section id="lifecycle">
+          <h1>2. Request Lifecycle in Spring Boot</h1>
+
+          <p>Let’s follow a real <code>GET /cases/123</code> request step-by-step.</p>
+
+          <h2>Step-by-step journey</h2>
+
+          <ol>
+            <li><strong>Client sends request</strong><br>
+              <code>GET https://api.myapp.com/cases/123</code><br>
+              → usually goes through DNS → CDN → Load Balancer
+            </li>
+
+            <li><strong>Load Balancer</strong><br>
+              Distributes traffic across multiple application instances.<br>
+              Common choices: AWS ALB, Nginx, HAProxy, Traefik, Envoy
+            </li>
+
+            <li><strong>Tomcat (embedded web server)</strong><br>
+              Listens on port 8080 (default)<br>
+              Accepts TCP connection → parses HTTP → creates Servlet request<br>
+              Startup log example:
+              <pre><code>Tomcat started on port(s): 8080 (http) with context path ''</code></pre>
+            </li>
+
+            <li><strong>DispatcherServlet (Spring MVC front controller)</strong><br>
+              Central dispatcher — all requests go through it.<br>
+              Responsibilities:
+              <ul>
+                <li>Handler Mapping — finds matching @Controller method</li>
+                <li>Handler Adapter — invokes the method</li>
+                <li>View resolution / Response conversion (usually @ResponseBody → JSON)</li>
+              </ul>
+            </li>
+
+            <li><strong>Controller layer</strong><br>
+              Thin layer — should mostly:
+              <ul>
+                <li>Validate input</li>
+                <li>Call service</li>
+                <li>Return DTO / entity (auto-converted to JSON)</li>
+              </ul>
+              <pre><code>@RestController
+@RequestMapping("/cases")
+class CaseController {
+
+    private final CaseService caseService;
+
+    @GetMapping("/{id}")
+    public CaseResponse getCase(@PathVariable Long id) {
+        return caseService.getCase(id);
+    }
+}</code></pre>
+            </li>
+
+            <li><strong>Service layer</strong><br>
+              Business logic, transactions, orchestration
+              <pre><code>@Service
+@Transactional(readOnly = true)
+class CaseService {
+
+    public CaseResponse getCase(Long id) {
+        Case c = caseRepository.findById(id)
+            .orElseThrow(() -> new CaseNotFoundException(id));
+        // business rules, permissions, mapping...
+        return mapper.toResponse(c);
+    }
+}</code></pre>
+            </li>
+
+            <li><strong>Repository layer (Spring Data JPA example)</strong><br>
+              <pre><code>public interface CaseRepository extends JpaRepository<Case, Long> {
+    // custom queries if needed
+}</code></pre>
+              Generated SQL: <code>SELECT * FROM cases WHERE id = ?</code>
+            </li>
+
+            <li><strong>Database</strong><br>
+              Returns row → mapped to entity → returned back through layers
+            </li>
+          </ol>
+
+          <div class="callout warning">
+            <strong>Typical latency breakdown (real production API ~120–250 ms)</strong>
+            <ul>
+              <li>Network / CDN / LB               ~20–50 ms</li>
+              <li>Tomcat → DispatcherServlet       ~3–8 ms</li>
+              <li>Controller + mapping             ~2–10 ms</li>
+              <li>Service logic                    ~5–30 ms</li>
+              <li>Database query + network         ~50–150 ms ← most common bottleneck</li>
+            </ul>
+          </div>
+        </section>
+
+
+        <section id="threading">
+          <h1>3. Threading Model in Spring Boot (Tomcat)</h1>
+
+          <div class="callout note">
+            <strong>Default model: Thread-per-request (servlet 3.1 blocking I/O)</strong><br>
+            1 incoming request → 1 dedicated thread from Tomcat thread pool
+          </div>
+
+          <h2>Thread pool configuration (common defaults & tuning)</h2>
+          <pre><code>server.tomcat.threads.max=200              # max concurrent requests
+server.tomcat.threads.min-spare=10           # minimum idle threads
+server.tomcat.accept-count=100               # queue size when all threads busy
+server.tomcat.connection-timeout=20000       # 20s</code></pre>
+
+          <div class="callout warning">
+            If 200 threads are busy and 150 more requests arrive → 150 go into queue.<br>
+            Long queue → high latency → timeouts → bad user experience.
+          </div>
+
+          <h2>Blocking vs non-blocking in practice</h2>
+          <table>
+            <tr><th>Operation type</th><th>Thread behavior</th><th>Concurrency impact</th><th>Example</th></tr>
+            <tr><td>Blocking (default)</td><td>Thread waits</td><td>Limited by thread pool size</td><td>JPA .findById(), JdbcTemplate.query()</td></tr>
+            <tr><td>Async controller</td><td>Thread released early</td><td>Higher throughput possible</td><td><code>CompletableFuture</code>, @Async, WebClient</td></tr>
+            <tr><td>Reactive (WebFlux)</td><td>Event-loop (few threads)</td><td>Very high concurrency</td><td>Mono/Flux, R2DBC, WebClient</td></tr>
+          </table>
+
+          <details>
+            <summary>Async controller example (simple but powerful)</summary>
+            <div class="details-body">
+              <pre><code>@GetMapping("/slow/{id}")
+public CompletableFuture&lt;CaseResponse&gt; getCaseAsync(@PathVariable Long id) {
+    return CompletableFuture.supplyAsync(() -&gt; 
+        caseService.getCase(id), taskExecutor);
+}</code></pre>
+              <p>→ Tomcat thread is released while <code>supplyAsync</code> runs on separate thread pool</p>
+            </div>
+          </details>
+        </section>
+
+
+        <section id="jvm">
+          <h1>4. JVM Memory Model (HotSpot 2025 perspective)</h1>
+
+          <pre><code>JVM Process Memory
+├── Heap                 ← objects live here
+│   ├── Young Generation (Eden + Survivor)
+│   └── Old Generation
+├── Metaspace            ← class metadata
+├── Thread stacks        ← one per thread (~1 MB each)
+├── Direct memory        ← off-heap (Netty, ByteBuffers...)</code></pre>
+
+          <h2>Heap tuning flags (very common in production)</h2>
+          <pre><code>-Xms4g               # initial heap size
+-Xmx4g               # max heap size
+-XX:+UseG1GC         # most common GC 2024–2026
+-XX:MaxGCPauseMillis=200
+-XX:+AlwaysPreTouch
+-XX:+UseStringDeduplication</code></pre>
+
+          <h3>Common GC behavior patterns</h3>
+          <ul>
+            <li><strong>Minor GC</strong> — fast, frequent (young gen), usually < 50 ms</li>
+            <li><strong>Mixed GC</strong> (G1) — cleans young + some old regions</li>
+            <li><strong>Full GC</strong> — slow (seconds), stop-the-world, should be rare</li>
+          </ul>
+
+          <div class="callout warning">
+            <strong>Very common production problems caused by heap pressure</strong>
+            <ul>
+              <li>Large JSON responses / reports → huge temporary objects</li>
+              <li>Unbounded caches → Old Gen fills up → frequent Full GC</li>
+              <li>Memory leak in ThreadLocal / caches → slow death</li>
+            </ul>
+          </div>
+
+          <h3>Monitoring must-have metrics</h3>
+          <ul>
+            <li>Heap used / committed / max</li>
+            <li>GC pause time & frequency (young / mixed / full)</li>
+            <li>Allocation rate (MB/s)</li>
+            <li>Old Gen occupancy before/after GC</li>
+            <li>Thread count (live / daemon)</li>
+          </ul>
+        </section>
+
+
+        <section id="summary">
+          <h1>Key Takeaways & Production Mindset</h1>
+
+          <div class="callout note">
+            <strong>After this module you should understand:</strong>
+            <ul>
+              <li>Full request path: Client → LB → Tomcat → DispatcherServlet → Controller → Service → Repo → DB</li>
+              <li>Thread-per-request model → thread pool saturation is a major bottleneck</li>
+              <li>Blocking I/O wastes threads → async or reactive helps under high concurrency</li>
+              <li>Heap pressure (allocation rate + GC behavior) is one of the top 3 causes of latency spikes</li>
+              <li>Most real latency usually comes from: database / external calls / GC pauses</li>
+            </ul>
+          </div>
+
+          <p><strong>Next topics to cover in Phase 2:</strong></p>
+          <ul>
+            <li>Spring Boot startup deep dive (beans, auto-configuration, conditions)</li>
+            <li>Dependency Injection & Bean scopes in depth</li>
+            <li>Transaction management (propagation, isolation levels)</li>
+            <li>Spring MVC vs WebFlux — when to choose what</li>
+            <li>Common performance anti-patterns & fixes</li>
+          </ul>
+        </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const search = document.getElementById('search');
+        const sections = document.querySelectorAll('section');
+        const themeBtn = document.getElementById('theme');
+        const menuToggle = document.getElementById('menu-toggle');
+        const backdrop = document.getElementById('backdrop');
+        const navLinks = document.querySelectorAll('nav a');
+        const downloadBtn = document.getElementById('download-pdf');
+        const html = document.documentElement;
+        const body = document.body;
+
+        // Theme toggle
+        themeBtn.onclick = () => {
+            html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+        };
+
+        // Mobile sidebar
+        const toggleSidebar = () => body.classList.toggle('sidebar-open');
+        menuToggle.onclick = toggleSidebar;
+        backdrop.onclick = toggleSidebar;
+
+        navLinks.forEach(link => {
+            link.onclick = () => {
+                if (window.innerWidth <= 768) body.classList.remove('sidebar-open');
+            };
+        });
+
+        // Live search
+        search.oninput = () => {
+            const q = search.value.toLowerCase().trim();
+            sections.forEach(s => {
+                s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+            });
+        };
+
+        // PDF print preparation
+        downloadBtn.onclick = () => {
+            const allDetails = document.querySelectorAll('details');
+            const states = [...allDetails].map(d => d.open);
+            const prevSearch = search.value;
+
+            search.value = '';
+            sections.forEach(s => s.classList.remove('hidden'));
+            allDetails.forEach(d => d.open = true);
+
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => {
+                    allDetails.forEach((d,i) => d.open = states[i]);
+                    if (prevSearch) {
+                        search.value = prevSearch;
+                        search.oninput();
+                    }
+                }, 400);
+            }, 100);
+        };
+    </script>
+</body>
+</html>

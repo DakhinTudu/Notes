@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Core Java Notes — Master Guide</title>
+    <title>Docker for Backend Mastery — Spring Boot Guide</title>
 
     <style>
         :root {
@@ -283,8 +283,6 @@
                 display: block !important;
                 height: auto !important;
                 overflow: visible !important;
-                margin: 0 !important;
-                padding: 0 !important;
             }
 
             main {
@@ -292,10 +290,8 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 overflow: visible !important;
-                width: 100% !important;
             }
 
-            /* Hide UI elements */
             header,
             nav,
             #backdrop,
@@ -346,13 +342,6 @@
                 background: #f0f7ff;
             }
 
-            p,
-            li {
-                font-size: 11.5pt;
-                line-height: 1.6;
-                color: #1f2937;
-            }
-
             .callout {
                 page-break-inside: avoid;
                 border-radius: 12px !important;
@@ -360,7 +349,6 @@
                 margin: 20pt 0 !important;
                 border: 1px solid #e5e7eb !important;
                 border-left-width: 8px !important;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
             }
 
             .note {
@@ -390,27 +378,6 @@
                 background: #fff5f5 !important;
                 padding: 2px 4px !important;
                 border-radius: 3px !important;
-                font-size: 0.95em !important;
-            }
-
-            details {
-                display: block !important;
-                border: 1px solid #e1e4e8 !important;
-                border-radius: 6px !important;
-                margin-bottom: 15pt !important;
-            }
-
-            summary {
-                background-color: #f6f8fa !important;
-                color: #0366d6 !important;
-                font-weight: bold !important;
-                padding: 10pt !important;
-                border-bottom: 1px solid #e1e4e8 !important;
-            }
-
-            .print-only {
-                display: block !important;
-                background: transparent;
             }
 
             .pdf-cover {
@@ -457,13 +424,6 @@
                 border: 1px solid #e5e7eb;
             }
 
-            .author-details p {
-                font-size: 20pt;
-                margin-bottom: 25pt;
-                color: #111827;
-                font-weight: 700;
-            }
-
             .contact-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -474,9 +434,6 @@
             .contact-item {
                 font-size: 10pt;
                 color: #555;
-                display: flex;
-                align-items: center;
-                gap: 5pt;
             }
 
             .cover-footer {
@@ -569,13 +526,15 @@
             header input {
                 width: 36px;
                 padding: 8px;
+                cursor: pointer;
                 border-radius: 50%;
                 text-align: center;
                 padding-left: 8px;
             }
 
-            header input::placeholder {
-                color: transparent;
+            .search-wrapper svg {
+                left: 50%;
+                transform: translateX(-50%);
             }
 
             .search-wrapper:focus-within {
@@ -586,17 +545,6 @@
                 z-index: 1100;
             }
 
-            .search-wrapper:focus-within input {
-                width: 100%;
-                border-radius: 6px;
-                text-align: left;
-                padding: 8px 12px 8px 32px;
-            }
-
-            .search-wrapper:focus-within input::placeholder {
-                color: var(--text-secondary);
-            }
-
             nav {
                 position: fixed;
                 left: 0;
@@ -604,7 +552,6 @@
                 bottom: 0;
                 width: var(--sidebar-width);
                 transform: translateX(-100%);
-                border-right: 1px solid var(--border-color);
             }
 
             .sidebar-open nav {
@@ -618,14 +565,6 @@
             main {
                 padding: 20px 15px;
             }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            h2 {
-                font-size: 1.4rem;
-            }
         }
     </style>
 </head>
@@ -633,8 +572,8 @@
 <body>
     <div class="print-only pdf-cover">
         <div class="cover-content">
-            <h1>Core Java Notes</h1>
-            <p class="subtitle">Java & OOP Principles — Master Guide</p>
+            <h1>Docker for Backend Mastery</h1>
+            <p class="subtitle">Spring Boot — Master Guide</p>
             <div class="author-details">
                 <p>By <strong>Dakhin Tudu</strong></p>
                 <div class="contact-grid">
@@ -654,7 +593,7 @@
         <header>
             <div class="header-left">
                 <button id="menu-toggle" aria-label="Toggle Menu">☰</button>
-                <h1>Core Java</h1>
+                <h1>Docker Notes</h1>
             </div>
             <div class="header-actions">
                 <div class="search-wrapper">
@@ -670,28 +609,22 @@
         </header>
 
         <nav>
-            <h2>Fundamentals</h2>
-            <a href="#m1">Module 1: Basics</a>
-            <a href="#m2">Module 2: Control Flow</a>
-            <h2>OOP & Core</h2>
-            <a href="#m3">Module 3: OOP Principles</a>
-            <a href="#m4">Module 4: Abstraction</a>
-            <a href="#m5">Module 5: Strings</a>
-            <a href="#m6">Module 6: Arrays</a>
-            <a href="#m7">Module 7: Wrappers</a>
-            <a href="#m8">Module 8: Exceptions</a>
-            <h2>Advanced Core</h2>
-            <a href="#m9">Module 9: Multithreading</a>
-            <a href="#m10">Module 10: Collections</a>
-            <a href="#m11">Module 11: Generics</a>
-            <a href="#m12">Module 12: File I/O</a>
-            <a href="#m13">Module 13: Java 8</a>
-            <h2>Deep Dives</h2>
-            <a href="#m14">Module 14: Inner Classes</a>
-            <a href="#m15">Module 15: Reflection</a>
-            <a href="#m16">Module 16: JVM</a>
-            <a href="#m17">Module 17: Misc</a>
-
+            <h2>Phase 1: Foundations</h2>
+            <a href="#m1">Module 1: Mental Model</a>
+            <a href="#m2">Module 2: The JAR Foundation</a>
+            <h2>Phase 2: Dockerizing</h2>
+            <a href="#m3">Module 3: Dockerfile Deep Dive</a>
+            <a href="#m4">Module 4: Build & Run</a>
+            <a href="#m5">Module 5: Env & Ports</a>
+            <h2>Phase 3: Production</h2>
+            <a href="#m6">Module 6: Multi-stage Build</a>
+            <a href="#m7">Module 7: Docker Compose</a>
+            <h2>Phase 4: Scaling</h2>
+            <a href="#m8">Module 8: Microservices</a>
+            <a href="#m9">Module 9: AWS EC2 Deployment</a>
+            <h2>Phase 5: Expert Level</h2>
+            <a href="#m10">Module 10: Pro Debugging</a>
+            <a href="#m11">Module 11: Interview Mastery</a>
             <div class="nav-footer">
                 <button id="download-pdf" class="download-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -709,384 +642,371 @@
             <div class="content" id="content">
 
                 <section id="m1">
-                    <h1>Module 1: Java Basics & Fundamentals</h1>
+                    <h1>MODULE 1: The Docker Mental Model</h1>
+                    <h2>1.1 What is Docker?</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Docker is a way to package your application + its runtime (JDK) + its config into a single,
+                        portable unit called an <strong>Image</strong>, which runs as a <strong>Container</strong>.
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        Without it, you face the "It works on my machine" curse. Manual setup on servers is slow,
+                        error-prone, and inconsistent across environments (Dev vs Prod).
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        By using a <code>Dockerfile</code> (blueprint) to build an <code>Image</code> (immutable
+                        template), which then spawns <code>Containers</code> (running instances).
+                    </div>
+
+                    <h3>1.2 Core Terminology</h3>
                     <ul>
-                        <li>History of Java</li>
-                        <li>Features of Java</li>
-                        <li>JVM, JRE, JDK (architecture & differences)</li>
-                        <li>Java Program Structure</li>
-                        <li>main() method</li>
-                        <li>Compilation & Execution flow</li>
-                        <li>Data Types (Primitive & Non-Primitive)</li>
-                        <li>Variables (local, instance, static)</li>
-                        <li>Type Casting (implicit, explicit)</li>
-                        <li>Operators (arithmetic, relational, logical, bitwise, ternary)</li>
-                        <li>Keywords & Identifiers</li>
-                        <li>Comments</li>
-                        <li>Unicode & Naming Conventions</li>
+                        <li><strong>Image:</strong> The static "snapshot" of your app. Think of it as a Class in Java.
+                        </li>
+                        <li><strong>Container:</strong> The running instance of an Image. Think of it as an Object in
+                            Java.</li>
+                        <li><strong>Registry:</strong> A storage for images (like Docker Hub or GitHub Container
+                            Registry).</li>
                     </ul>
                 </section>
 
                 <section id="m2">
-                    <h1>Module 2: Control Flow Statements</h1>
-                    <ul>
-                        <li>If / If-Else</li>
-                        <li>Nested If</li>
-                        <li>Switch Case (rules, fall-through)</li>
-                        <li>Loops (for, while, do-while, enhanced for)</li>
-                        <li>Loop Control Statements (break, continue, return)</li>
-                    </ul>
+                    <h1>MODULE 2: The JAR Foundation</h1>
+                    <h2>2.1 Jar Creation</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        A JAR is the compiled, packaged version of your Spring Boot code.
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        Docker does not care about your Java classes or packages. It only understands files. The JAR is
+                        the <strong>executable artifact</strong> Docker needs to run.
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        Run this in your project root:
+                        <pre><code>mvn clean package</code></pre>
+                        Output: <code>target/my-app-0.0.1-SNAPSHOT.jar</code>
+                    </div>
+
+                    <div class="callout warning">
+                        <strong>Crucial Rule</strong>
+                        If your app doesn't work locally (via <code>java -jar</code>), it will <strong>NEVER</strong>
+                        work in Docker. Fix the build first.
+                    </div>
                 </section>
 
                 <section id="m3">
-                    <h1>Module 3: Object-Oriented Programming (OOP)</h1>
-                    <ul>
-                        <li>OOP Principles (Encapsulation, Inheritance, Polymorphism, Abstraction)</li>
-                        <li>Class & Object</li>
-                        <li>Constructors</li>
-                        <li>this keyword</li>
-                        <li>static keyword</li>
-                        <li>Inheritance types</li>
-                        <li>Method Overloading & Overriding</li>
-                        <li>super keyword</li>
-                        <li>Dynamic Method Dispatch</li>
-                        <li>final keyword</li>
-                        <li>Object class methods (toString, equals, hashCode, etc.)</li>
-                    </ul>
+                    <h1>MODULE 3: Dockerfile Deep Dive</h1>
+                    <h2>3.1 The Basic Dockerfile</h2>
+                    <pre><code>FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY target/my-app.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre>
 
-                    <h2>3.1 Core Concepts Deep Dive: Cohesion & Binding</h2>
-                    <p>This section explores the fundamental mechanics that enable Polymorphism and robust design.</p>
+                    <h2>3.2 Instruction Breakdown</h2>
 
-                    <h3>1️⃣ Cohesion (Design Foundation)</h3>
-                    <p>
-                        <strong>What is Cohesion?</strong><br>
-                        Cohesion measures how strongly related the responsibilities of a class or method are.
-                    </p>
-                    <ul>
-                        <li><strong>High cohesion</strong> = one class does one job well.</li>
-                        <li><strong>Low cohesion</strong> = one class does many unrelated things.</li>
-                    </ul>
-
-                    <h4>❌ Low Cohesion (Bad)</h4>
-                    <pre><code>class UserService {
-    void login() {}
-    void generatePDF() {}
-    void sendEmail() {}
-    void connectToDatabase() {}
-}</code></pre>
-                    <div class="callout warning">
-                        <strong>Problems</strong>
-                        Hard to maintain, changes ripple everywhere, and difficult testing.
-                    </div>
-
-                    <h4>✅ High Cohesion (Good)</h4>
-                    <pre><code>class AuthService {
-    void login() {}
-    void logout() {}
-}
-
-class EmailService {
-    void sendEmail() {}
-}</code></pre>
+                    <h3>3.2.1 FROM</h3>
                     <div class="callout note">
-                        <strong>Benefits</strong>
-                        Easier maintenance, clear responsibility, reusable & testable.
+                        <strong>WHAT:</strong> Defines the base image.
+                        <br><strong>WHY:</strong> You don't want to install Linux or Java manually every time. Base
+                        images provide the OS + Runtime.
+                        <br><strong>HOW:</strong> <code>FROM openjdk:17-jdk-slim</code>. Always match your project's
+                        Java version.
                     </div>
 
-                    <h3>2️⃣ Binding (Core Execution Concept)</h3>
-                    <p><strong>Binding</strong> = connecting a method call to the method implementation.</p>
-                    <pre><code>obj.method();  // which method body?</code></pre>
-
-                    <h4>1. Static Binding (Compile-Time / Early Binding)</h4>
-                    <ul>
-                        <li>Bound before execution, during compilation.</li>
-                        <li>Happens with: <strong>static</strong>, <strong>final</strong>, <strong>private</strong>
-                            methods, and <strong>Method Overloading</strong>.</li>
-                    </ul>
-                    <pre><code>class A {
-    static void show() { System.out.println("A"); }
-}
-A.show(); // Compiler knows exactly what to call</code></pre>
-
-                    <h4>2. Dynamic Binding (Runtime / Late Binding)</h4>
-                    <ul>
-                        <li>Bound during execution.</li>
-                        <li>Happens with: <strong>Method Overriding</strong> and <strong>Parent reference → Child
-                                object</strong>.</li>
-                    </ul>
-                    <pre><code>class A {
-    void show() { System.out.println("A"); }
-}
-class B extends A {
-    void show() { System.out.println("B"); }
-}
-
-A obj = new B();
-obj.show();  // B.show() -> JVM decides at runtime</code></pre>
-
+                    <h3>3.2.2 WORKDIR</h3>
                     <div class="callout note">
-                        <strong>Key Rule</strong>
-                        Methods are bound using the <strong>object type</strong>, not the reference type (except
-                        static/private/final).
+                        <strong>WHAT:</strong> Sets the working directory inside the container.
+                        <br><strong>WHY:</strong> Avoids cluttering the root (<code>/</code>) and provides a predictable
+                        path for execution.
+                        <br><strong>HOW:</strong> <code>WORKDIR /app</code>. All subsequent commands run here.
                     </div>
 
-                    <h3>3️⃣ Binding Consequence #1: Polymorphism</h3>
-                    <p>One interface, many implementations. Example: <code>A obj = new B();</code></p>
-
-                    <h4>Compile-time vs Runtime Polymorphism</h4>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Mechanism</th>
-                                <th>Binding</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Compile-time</td>
-                                <td>Overloading</td>
-                                <td>Static</td>
-                            </tr>
-                            <tr>
-                                <td>Runtime</td>
-                                <td>Overriding</td>
-                                <td>Dynamic</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <h4>JVM Insight (Intermediate+)</h4>
-                    <ul>
-                        <li>JVM uses a <strong>Virtual Method Table (V-Table)</strong>.</li>
-                        <li>Object holds method references.</li>
-                        <li>Overridden method replaces parent entry.</li>
-                    </ul>
-
-                    <h3>4️⃣ Binding Consequence #2: Method Resolution</h3>
-                    <p>How Java resolves a method call:</p>
-                    <ol>
-                        <li><strong>Compiler</strong> checks method existence using <strong>reference type</strong>.
-                        </li>
-                        <li><strong>JVM</strong> checks overridden version using <strong>object type</strong>.</li>
-                        <li>Final method body executes.</li>
-                    </ol>
-
-                    <h3>5️⃣ Binding Consequence #3: Variable Resolution</h3>
-                    <div class="callout warning">
-                        <strong>Critical</strong>
-                        Variables are <strong>NOT</strong> polymorphic.
-                    </div>
-                    <pre><code>class A { int x = 10; }
-class B extends A { int x = 20; }
-
-A obj = new B();
-System.out.println(obj.x); // Output: 10</code></pre>
-                    <p><strong>Why?</strong> Variables use reference type. No overriding. Compile-time resolution only.
-                    </p>
-
-                    <h3>6️⃣ Type Casting</h3>
-                    <p>Exists because Reference type and Object type are different.</p>
-
-                    <h4>1. Upcasting (Safe, implicit)</h4>
-                    <pre><code>A obj = new B(); // Child → Parent</code></pre>
-
-                    <h4>2. Downcasting (Unsafe, explicit)</h4>
-                    <pre><code>B obj = (B) new A(); // ❌ Runtime Error (ClassCastException)
-
-// Safe Downcasting
-if (obj instanceof B) {
-    B b = (B) obj;
-}</code></pre>
+                    <h3>3.2.3 COPY</h3>
                     <div class="callout note">
-                        <strong>Note</strong>
-                        Casting does NOT change the object. It only tells the compiler to treat the reference as a
-                        specific type.
+                        <strong>WHAT:</strong> Moves files from your laptop into the Docker Image.
+                        <br><strong>WHY:</strong> Containers are isolated; they cannot see your local files unless you
+                        explicitly copy them.
+                        <br><strong>HOW:</strong> <code>COPY target/*.jar app.jar</code>. (Left: Host, Right:
+                        Container).
                     </div>
 
-                    <h3>7️⃣ Master-Level Mental Model</h3>
-                    <ul>
-                        <li><strong>Reference Type</strong> → compiler rules</li>
-                        <li><strong>Object Type</strong> → runtime behavior</li>
-                        <li><strong>Method Type</strong> → binding decision</li>
-                    </ul>
-
+                    <h3>3.2.4 EXPOSE</h3>
                     <div class="callout note">
-                        <strong>Interview One-liners</strong>
-                        <ul>
-                            <li>“Java achieves runtime polymorphism through dynamic binding.”</li>
-                            <li>“Static methods are resolved using reference type.”</li>
-                            <li>“Variables do not participate in polymorphism.”</li>
-                        </ul>
+                        <strong>WHAT:</strong> Documentation of the used port.
+                        <br><strong>WHY:</strong> Purely for communication clarity between developers and orchestration
+                        tools.
+                        <br><strong>HOW:</strong> <code>EXPOSE 8080</code>. ⚠️ <strong>Important:</strong> This does NOT
+                        publish the port.
+                    </div>
+
+                    <h3>3.2.5 ENTRYPOINT</h3>
+                    <div class="callout note">
+                        <strong>WHAT:</strong> The command that runs when the container starts.
+                        <br><strong>WHY:</strong> A container without a running process dies immediately.
+                        <br><strong>HOW:</strong> <code>ENTRYPOINT ["java", "-jar", "app.jar"]</code>.
                     </div>
                 </section>
 
                 <section id="m4">
-                    <h1>Module 4: Abstraction & Interfaces</h1>
-                    <ul>
-                        <li>Abstract Classes & Methods</li>
-                        <li>Interfaces</li>
-                        <li>Multiple Inheritance via Interface</li>
-                        <li>Functional Interfaces</li>
-                        <li>Default & Static methods in Interface</li>
-                        <li>Marker Interfaces (Serializable, Cloneable)</li>
-                        <li>Difference between Abstract Class & Interface</li>
-                    </ul>
+                    <h1>MODULE 4: Build & Run</h1>
+                    <h2>4.1 Building the Image</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Converting your <code>Dockerfile</code> into a usable <code>Image</code>.
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        <pre><code>docker build -t my-spring-app .</code></pre>
+                        <ul>
+                            <li><code>-t</code>: Tag (name) of the image.</li>
+                            <li><code>.</code>: The current directory (Build Context).</li>
+                        </ul>
+                    </div>
+
+                    <h2>4.2 Running the Container</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Starting a live instance of your image.
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        <pre><code>docker run -p 8080:8080 my-spring-app</code></pre>
+                        <strong>Port Mapping:</strong> <code>HOST : CONTAINER</code>.
+                    </div>
                 </section>
 
                 <section id="m5">
-                    <h1>Module 5: Strings</h1>
-                    <ul>
-                        <li>String class & String Pool</li>
-                        <li>Immutability of String</li>
-                        <li>String, StringBuilder, StringBuffer</li>
-                        <li>String methods</li>
-                        <li>equals() vs ==</li>
-                        <li>Performance comparison</li>
-                    </ul>
+                    <h1>MODULE 5: Env Variables & Port Mapping</h1>
+                    <h2>5.1 Environment Variables</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Injecting configuration at runtime without changing the code.
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        Security (no passwords in code) and Flexibility (same image, different DBs).
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        In <code>application.yml</code>:
+                        <pre><code>spring:
+  datasource:
+    url: ${DB_URL}</code></pre>
+                        When running Docker:
+                        <pre><code>docker run -e DB_URL=jdbc:postgresql://host:5432/db -p 8080:8080 my-app</code></pre>
+                    </div>
                 </section>
 
                 <section id="m6">
-                    <h1>Module 6: Arrays</h1>
-                    <ul>
-                        <li>One-Dimensional & Multi-Dimensional Arrays</li>
-                        <li>Array Initialization & Traversal</li>
-                        <li>Anonymous Arrays</li>
-                        <li>Arrays utility class</li>
-                        <li>Array vs Collection</li>
-                    </ul>
+                    <h1>MODULE 6: Industrial Multi-stage Build</h1>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        A Dockerfile with two parts: one to <strong>Build</strong> (needs Maven) and one to
+                        <strong>Run</strong> (needs only JRE).
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        Standard builds include Maven and source code in the final image, making it huge (~600MB) and
+                        insecure. Multi-stage results in a sleek (~150MB) production-ready image.
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        <pre><code># STAGE 1: Build
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /build
+COPY . .
+RUN mvn clean package -DskipTests
+
+# STAGE 2: Run
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY --from=builder /build/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre>
+                    </div>
                 </section>
 
                 <section id="m7">
-                    <h1>Module 7: Wrapper Classes</h1>
-                    <ul>
-                        <li>Wrapper Classes Overview</li>
-                        <li>Autoboxing & Unboxing</li>
-                        <li>Primitive vs Wrapper</li>
-                        <li>ValueOf & Parse methods</li>
-                    </ul>
+                    <h1>MODULE 7: Docker Compose (Spring + DB)</h1>
+                    <h2>7.1 What is Docker Compose?</h2>
+                    <div class="callout note">
+                        <strong>WHAT:</strong> A tool for defining and running multi-container applications.
+                        <br><strong>WHY:</strong> Real apps need a DB. Running 5 <code>docker run</code> commands
+                        manually is a nightmare.
+                        <br><strong>HOW:</strong> Use a <code>docker-compose.yml</code> file.
+                    </div>
+
+                    <h3>7.2 The Compose File</h3>
+                    <pre><code>version: "3.9"
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/mydb
+
+volumes:
+  pgdata:</code></pre>
+
+                    <div class="callout note">
+                        <strong>Pro Tip:</strong> Inside the Docker network, use the <strong>service name</strong>
+                        (e.g., <code>db</code>) as the hostname. Not <code>localhost</code>!
+                    </div>
                 </section>
 
                 <section id="m8">
-                    <h1>Module 8: Exception Handling</h1>
-                    <ul>
-                        <li>Types of Exceptions (Checked, Unchecked, Errors)</li>
-                        <li>try-catch-finally</li>
-                        <li>Multiple catch blocks & Nested try</li>
-                        <li>throw vs throws</li>
-                        <li>Custom Exceptions</li>
-                        <li>Exception Propagation</li>
-                        <li>Best Practices</li>
-                    </ul>
+                    <h1>MODULE 8: Microservices Orchestration</h1>
+                    <h2>8.1 Service Discovery</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Services finding each other by name within a network.
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        In microservices, IP addresses change constantly. Names stay the same.
+                    </div>
+                    <div class="callout note">
+                        <strong>HOW</strong>
+                        Docker creates an internal DNS. If service A wants to call service B, it just hits
+                        <code>http://service-b:8080</code>.
+                    </div>
+
+                    <h3>8.2 Typical Layout</h3>
+                    <pre><code>/project-root
+ ├── gateway-service/ (Dockerfile)
+ ├── user-service/    (Dockerfile)
+ ├── order-service/   (Dockerfile)
+ └── docker-compose.yml</code></pre>
                 </section>
 
                 <section id="m9">
-                    <h1>Module 9: Multithreading</h1>
-                    <ul>
-                        <li>Thread Lifecycle</li>
-                        <li>Creating Thread (Extending Thread vs Implementing Runnable)</li>
-                        <li>Thread methods</li>
-                        <li>Synchronization & Inter-Thread Communication</li>
-                        <li>Deadlock</li>
-                        <li>Daemon Thread</li>
-                        <li>Thread Priority</li>
-                        <li>volatile keyword</li>
-                        <li>wait(), notify(), notifyAll()</li>
-                    </ul>
+                    <h1>MODULE 9: AWS EC2 Deployment</h1>
+                    <h2>9.1 The Flow</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        Running your Docker containers on a cloud virtual server.
+                    </div>
+                    <div class="callout note">
+                        <strong>WHY</strong>
+                        To make your app accessible to the world.
+                    </div>
+
+                    <h3>9.2 How to Deploy (Step-by-Step)</h3>
+                    <details>
+                        <summary>Click to view deployment steps</summary>
+                        <div class="details-body">
+                            <ol>
+                                <li><strong>Spin up EC2:</strong> Amazon Linux 2023 (T2.Micro is free).</li>
+                                <li><strong>Open Ports:</strong> Security Group -> Inbound Rules -> Add 8080.</li>
+                                <li><strong>Install Docker on EC2:</strong>
+                                    <pre><code>sudo yum update -y
+sudo yum install docker -y
+sudo systemctl start docker
+sudo usermod -aG docker ec2-user</code></pre>
+                                </li>
+                                <li><strong>Pull & Run:</strong>
+                                    <pre><code>docker pull your-name/my-app
+docker run -d -p 8080:8080 your-name/my-app</code></pre>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
                 </section>
 
                 <section id="m10">
-                    <h1>Module 10: Collections Framework</h1>
-                    <ul>
-                        <li>Collection Hierarchy</li>
-                        <li>List Interface (ArrayList, LinkedList, Vector, Stack)</li>
-                        <li>Set Interface (HashSet, LinkedHashSet, TreeSet)</li>
-                        <li>Queue Interface (PriorityQueue, Deque)</li>
-                        <li>Map Interface (HashMap, LinkedHashMap, TreeMap, Hashtable)</li>
-                        <li>Iterator & ListIterator</li>
-                        <li>Comparable vs Comparator</li>
-                        <li>Collections Utility Class</li>
-                        <li>Fail-fast vs Fail-safe</li>
-                    </ul>
+                    <h1>MODULE 10: Pro Debugging</h1>
+                    <h2>10.1 The Debugging Toolkit</h2>
+                    <div class="callout note">
+                        <strong>WHAT</strong>
+                        The skill of finding out why a container is "dead" or behaving weirdly.
+                    </div>
+
+                    <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+                        <thead>
+                            <tr style="background: var(--bg-secondary);">
+                                <th style="padding: 10px; border: 1px solid var(--border-color);">Command</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-color);">Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">
+                                    <code>docker ps -a</code></td>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">See even crashed
+                                    containers.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">
+                                    <code>docker logs [id]</code></td>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">Read the Spring Boot
+                                    log output.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">
+                                    <code>docker exec -it [id] sh</code></td>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">"Enter" the container
+                                    to check files.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">
+                                    <code>docker system prune</code></td>
+                                <td style="padding: 10px; border: 1px solid var(--border-color);">Cleanup: Delete all
+                                    unused data.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </section>
 
                 <section id="m11">
-                    <h1>Module 11: Generics</h1>
-                    <ul>
-                        <li>Generic Classes & Methods</li>
-                        <li>Bounded Types</li>
-                        <li>Wildcards (? extends, ? super)</li>
-                        <li>Type Erasure</li>
-                        <li>Advantages of Generics</li>
-                    </ul>
-                </section>
+                    <h1>MODULE 11: Interview Mastery Q&A</h1>
 
-                <section id="m12">
-                    <h1>Module 12: File Handling & I/O</h1>
-                    <ul>
-                        <li>File Class</li>
-                        <li>Byte Streams, Character Streams, Buffered Streams</li>
-                        <li>Serialization & Deserialization</li>
-                        <li>Transient keyword</li>
-                        <li>try-with-resources</li>
-                    </ul>
-                </section>
+                    <details>
+                        <summary>Q: Why use Docker for Spring Boot instead of just JARs?</summary>
+                        <div class="details-body">
+                            <strong>Answer:</strong> JARs only solve code portability. Docker solves "Environment
+                            Portability". JARs require you to install specific JDK versions and OS configs manually;
+                            Docker packages EVERYTHING.
+                        </div>
+                    </details>
 
-                <section id="m13">
-                    <h1>Module 13: Java 8 Features (Core Level)</h1>
-                    <ul>
-                        <li>Lambda Expressions</li>
-                        <li>Functional Interfaces</li>
-                        <li>Method References</li>
-                        <li>Stream API</li>
-                        <li>Optional Class</li>
-                        <li>forEach</li>
-                        <li>Default Methods</li>
-                        <li>Date & Time API</li>
-                    </ul>
-                </section>
+                    <details>
+                        <summary>Q: Difference between CMD and ENTRYPOINT?</summary>
+                        <div class="details-body">
+                            <strong>Answer:</strong> <code>ENTRYPOINT</code> is the main command that is not supposed to
+                            be overridden. <code>CMD</code> provides default arguments that can be easily overridden
+                            when starting the container.
+                        </div>
+                    </details>
 
-                <section id="m14">
-                    <h1>Module 14: Inner Classes</h1>
-                    <ul>
-                        <li>Static Nested Classes</li>
-                        <li>Non-Static Inner Classes</li>
-                        <li>Local Inner Classes</li>
-                        <li>Anonymous Inner Classes</li>
-                    </ul>
-                </section>
+                    <details>
+                        <summary>Q: Container is running but http://localhost:8080 fails. Why?</summary>
+                        <div class="details-body">
+                            <strong>Answer:</strong> Most common reason: Forgot <code>-p 8080:8080</code>. Without port
+                            mapping, the container's port is isolated from your host's network.
+                        </div>
+                    </details>
 
-                <section id="m15">
-                    <h1>Module 15: Reflection API</h1>
-                    <ul>
-                        <li>Reflection Overview</li>
-                        <li>Class Class</li>
-                        <li>Getting metadata & Accessing private members</li>
-                        <li>Use cases & risks</li>
-                    </ul>
-                </section>
-
-                <section id="m16">
-                    <h1>Module 16: JVM & Memory Management</h1>
-                    <ul>
-                        <li>JVM Architecture & Class Loader</li>
-                        <li>Memory Areas (Heap, Stack, Method Area)</li>
-                        <li>Garbage Collection & GC Algorithms</li>
-                        <li>Memory Leaks</li>
-                        <li>finalize() (legacy behavior)</li>
-                    </ul>
-                </section>
-
-                <section id="m17">
-                    <h1>Module 17: Miscellaneous Core Topics</h1>
-                    <ul>
-                        <li>enum</li>
-                        <li>var (Java 10 – optional awareness)</li>
-                        <li>Assertions</li>
-                        <li>Annotations (built-in)</li>
-                        <li>Cloning (Shallow vs Deep Copy)</li>
-                        <li>transient vs static</li>
-                    </ul>
+                    <details>
+                        <summary>Q: How do you persist data in a database container?</summary>
+                        <div class="details-body">
+                            <strong>Answer:</strong> Using <strong>Volumes</strong>. Volumes map a directory inside the
+                            container to a directory on your laptop, so data survives even if the container is deleted.
+                        </div>
+                    </details>
                 </section>
 
             </div>
@@ -1131,7 +1051,8 @@ if (obj instanceof B) {
         search.oninput = () => {
             const q = search.value.toLowerCase();
             sections.forEach(s => {
-                s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+                const text = s.innerText.toLowerCase();
+                s.classList.toggle('hidden', !text.includes(q));
             });
         };
 
@@ -1141,15 +1062,12 @@ if (obj instanceof B) {
             const originalDetailsState = Array.from(allDetails).map(d => d.open);
             const searchVal = search.value;
 
-            // Expand all content
             search.value = '';
             sections.forEach(s => s.classList.remove('hidden'));
             allDetails.forEach(d => d.open = true);
 
-            // Trigger Print
             window.print();
 
-            // Restore State
             setTimeout(() => {
                 allDetails.forEach((d, i) => d.open = originalDetailsState[i]);
                 if (searchVal) {

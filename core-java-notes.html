@@ -996,18 +996,321 @@ if (obj instanceof B) {
                 </section>
 
                 <section id="m10">
-                    <h1>Module 10: Collections Framework</h1>
+                    <h1>Module 10: Collection Framework</h1>
+                    <p>The Collection Framework defines a unified architecture for representing and manipulating collections of objects.</p>
+
+                    <h2>10.1 Introduction: Arrays vs Collections</h2>
+                    <p>While arrays are useful for representing multiple values with a single variable, they have significant limitations.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Arrays</th>
+                                <th>Collections</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Size</td>
+                                <td>Fixed (cannot grow/shrink at runtime)</td>
+                                <td>Growable (Dynamic sizing)</td>
+                            </tr>
+                            <tr>
+                                <td>Data Type</td>
+                                <td>Only Homogeneous</td>
+                                <td>Homogeneous & Heterogeneous</td>
+                            </tr>
+                            <tr>
+                                <td>Memory</td>
+                                <td>Not memory efficient (wasted space if size is too large)</td>
+                                <td>Memory efficient</td>
+                            </tr>
+                            <tr>
+                                <td>Ready-made methods</td>
+                                <td>Not available (must write logic manually)</td>
+                                <td>Extensive utility methods available</td>
+                            </tr>
+                            <tr>
+                                <td>Performance</td>
+                                <td>High (better for primitive data)</td>
+                                <td>Slightly lower (due to object overhead)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout note">
+                        <strong>Note</strong>
+                        Collections can only hold <strong>objects</strong>, not primitives. However, with Autoboxing (introduced in Java 1.5), we can directly add primitives, which are converted to Wrapper objects.
+                    </div>
+
+                    <h2>10.2 Key Interfaces Hierarchy</h2>
+                    <p>The Collection Framework is based on several key interfaces:</p>
                     <ul>
-                        <li>Collection Hierarchy</li>
-                        <li>List Interface (ArrayList, LinkedList, Vector, Stack)</li>
-                        <li>Set Interface (HashSet, LinkedHashSet, TreeSet)</li>
-                        <li>Queue Interface (PriorityQueue, Deque)</li>
-                        <li>Map Interface (HashMap, LinkedHashMap, TreeMap, Hashtable)</li>
-                        <li>Iterator & ListIterator</li>
-                        <li>Comparable vs Comparator</li>
-                        <li>Collections Utility Class</li>
-                        <li>Fail-fast vs Fail-safe</li>
+                        <li><strong>Collection:</strong> The root interface for all collections except Map.</li>
+                        <li><strong>List:</strong> Ordered collection with duplicates allowed (e.g., ArrayList, LinkedList).</li>
+                        <li><strong>Set:</strong> Unordered collection where duplicates are NOT allowed (e.g., HashSet, LinkedHashSet).</li>
+                        <li><strong>SortedSet/NavigableSet:</strong> Sets that maintain a sorting order (e.g., TreeSet).</li>
+                        <li><strong>Queue:</strong> For representing objects prior to processing (FIFO).</li>
+                        <li><strong>Map:</strong> Group of key-value pairs (NOT a child of Collection interface).</li>
                     </ul>
+
+                    <h3>10.2.1 Collection Interface Methods</h3>
+                    <p>These methods are available in almost all collection classes:</p>
+                    <ul>
+                        <li><code>add(Object o)</code>, <code>addAll(Collection c)</code></li>
+                        <li><code>remove(Object o)</code>, <code>removeAll(Collection c)</code>, <code>retainAll(Collection c)</code></li>
+                        <li><code>contains(Object o)</code>, <code>containsAll(Collection c)</code></li>
+                        <li><code>isEmpty()</code>, <code>size()</code>, <code>clear()</code></li>
+                        <li><code>iterator()</code>, <code>toArray()</code></li>
+                    </ul>
+
+                    <h2>10.3 List Interface Deep Dive</h2>
+                    <p>Used when <strong>insertion order</strong> must be preserved and <strong>duplicates</strong> are allowed.</p>
+
+                    <h3>1️⃣ ArrayList</h3>
+                    <ul>
+                        <li><strong>Underlying Data Structure:</strong> Resizable/Growable Array.</li>
+                        <li><strong>Frequent Operation:</strong> Best for <strong>Retrieval</strong> (implements <code>RandomAccess</code>).</li>
+                        <li><strong>Worst Operation:</strong> <strong>Insertion/Deletion in middle</strong> (requires shift operations).</li>
+                        <li><strong>Initial Capacity:</strong> Default is 10.</li>
+                        <li><strong>New Capacity Formula:</strong> <code>(CurrentCapacity * 3/2) + 1</code>.</li>
+                    </ul>
+                    <pre><code>ArrayList al = new ArrayList();
+al.add("A");
+al.add(10);
+al.add("A"); // Duplicates allowed
+al.add(null); // Null allowed
+System.out.println(al); // [A, 10, A, null]</code></pre>
+
+                    <h3>2️⃣ LinkedList</h3>
+                    <ul>
+                        <li><strong>Underlying Data Structure:</strong> Double Linked List.</li>
+                        <li><strong>Frequent Operation:</strong> Best for <strong>Insertion/Deletion</strong> in the middle.</li>
+                        <li><strong>Worst Operation:</strong> <strong>Retrieval</strong> (must traverse from start/end).</li>
+                        <li>Implements <code>Serializable</code> and <code>Cloneable</code> but <strong>NOT</strong> <code>RandomAccess</code>.</li>
+                    </ul>
+
+                    <h3>3️⃣ Vector & Stack</h3>
+                    <ul>
+                        <li><strong>Vector:</strong> Legacy class (1.0v), Thread-safe (methods are <strong>synchronized</strong>), slow performance.</li>
+                        <li><strong>Stack:</strong> Child class of Vector, designed for <strong>LIFO</strong> (Last-In-First-Out).
+                            <ul>
+                                <li><code>push(Object o)</code>: Add element.</li>
+                                <li><code>pop()</code>: Remove and return top element.</li>
+                                <li><code>peek()</code>: Return top element without removing.</li>
+                                <li><code>empty()</code>: Check if stack is empty.</li>
+                                <li><code>search(Object o)</code>: Return 1-based offset from top.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="callout warning">
+                        <strong>Legacy Classes</strong>
+                        Vector and Stack are generally avoided in modern Java. Use <code>ArrayList</code> or <code>Deque</code> instead.
+                    </div>
+
+                    <details>
+                        <summary>How to get a Synchronized ArrayList?</summary>
+                        <div class="details-body">
+                            <p>By default, ArrayList is non-synchronized. Use the <code>Collections</code> utility class:</p>
+                            <pre><code>List synchronizedList = Collections.synchronizedList(new ArrayList());</code></pre>
+                        </div>
+                    </details>
+
+                    <h2>10.4 Cursors in Java</h2>
+                    <p>Used to retrieve objects one by one from a collection.</p>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cursor</th>
+                                <th>Applicable For</th>
+                                <th>Movement</th>
+                                <th>Access Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Enumeration</strong></td>
+                                <td>Legacy classes (Vector, Stack)</td>
+                                <td>Forward only</td>
+                                <td>Read only</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Iterator</strong></td>
+                                <td>Any Collection class (Universal)</td>
+                                <td>Forward only</td>
+                                <td>Read & Remove</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ListIterator</strong></td>
+                                <td>Only List implemented classes</td>
+                                <td>Bi-directional</td>
+                                <td>Read, Remove, Replace, Add</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>10.5 Set Interface Deep Dive</h2>
+                    <p>Used when <strong>duplicates</strong> are NOT allowed and <strong>insertion order</strong> is not important.</p>
+
+                    <h3>1️⃣ HashSet</h3>
+                    <ul>
+                        <li>Underlying Data Structure: <strong>Hashtable</strong>.</li>
+                        <li>Objects are inserted based on <strong>HashCode</strong>.</li>
+                        <li>Best for <strong>Search</strong> operations.</li>
+                    </ul>
+
+                    <h3>2️⃣ LinkedHashSet</h3>
+                    <ul>
+                        <li>Hybrid Data Structure: <strong>Hashtable + Linked List</strong>.</li>
+                        <li>Preserves <strong>Insertion Order</strong>.</li>
+                        <li>Introduced in 1.4v. Best for cache-based applications.</li>
+                    </ul>
+
+                    <h3>3️⃣ TreeSet</h3>
+                    <ul>
+                        <li>Underlying Data Structure: <strong>Balanced Tree</strong>.</li>
+                        <li>All elements are inserted according to <strong>Sorting Order</strong>.</li>
+                        <li>Heterogeneous objects NOT allowed (will throw <code>ClassCastException</code>).</li>
+                    </ul>
+
+                    <h2>10.6 Sorting: Comparable vs Comparator</h2>
+                    <p>How Java decides the order of elements in Sorted collections.</p>
+
+                    <div class="callout note">
+                        <strong>Key Difference</strong>
+                        <ul>
+                            <li><strong>Comparable:</strong> Meant for <strong>Default Natural Sorting</strong> (e.g., Ascending for numbers).</li>
+                            <li><strong>Comparator:</strong> Meant for <strong>Customized Sorting</strong> (e.g., Descending, sorting by Name/ID).</li>
+                        </ul>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Comparable</th>
+                                <th>Comparator</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Package</td>
+                                <td><code>java.lang</code></td>
+                                <td><code>java.util</code></td>
+                            </tr>
+                            <tr>
+                                <td>Method</td>
+                                <td><code>compareTo(Object obj)</code></td>
+                                <td><code>compare(obj1, obj2)</code>, <code>equals()</code></td>
+                            </tr>
+                            <tr>
+                                <td>Usage</td>
+                                <td>Single sorting logic</td>
+                                <td>Multiple customized sorting logics</td>
+                            </tr>
+                            <tr>
+                                <td>Implemented By</td>
+                                <td>The actual Bean class (e.g., Student)</td>
+                                <td>A separate utility class</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <pre><code>// Example: compareTo return values
+obj1.compareTo(obj2); 
+// returns -ve if obj1 &lt; obj2
+// returns +ve if obj1 &gt; obj2
+// returns 0 if obj1 == obj2</code></pre>
+
+                    <h2>10.7 Map Interface</h2>
+                    <p>Map is used when we want to represent data in <strong>Key-Value pairs</strong>. Each key must be unique, but values can be duplicated.</p>
+
+                    <h3>1️⃣ HashMap</h3>
+                    <ul>
+                        <li>Underlying Data Structure: <strong>Hashtable</strong>.</li>
+                        <li>Insertion order NOT preserved (based on HashCode of keys).</li>
+                        <li>Allows <strong>one null key</strong> and <strong>multiple null values</strong>.</li>
+                        <li>Non-synchronized (not thread-safe).</li>
+                        <li><strong>Initial Capacity:</strong> 16</li>
+                        <li><strong>Load Factor:</strong> 0.75</li>
+                    </ul>
+
+                    <h3>2️⃣ LinkedHashMap</h3>
+                    <ul>
+                        <li>Underlying Data Structure: <strong>Hashtable + Linked List</strong>.</li>
+                        <li>Preserves <strong>Insertion Order</strong>.</li>
+                    </ul>
+
+                    <h3>3️⃣ TreeMap</h3>
+                    <ul>
+                        <li>Underlying Data Structure: <strong>Red-Black Tree</strong>.</li>
+                        <li>Keys are sorted according to <strong>Default Natural Sorting Order</strong> or <strong>Customized Order</strong>.</li>
+                        <li>Keys must be <strong>Homogeneous</strong> and <strong>Comparable</strong>.</li>
+                    </ul>
+
+                    <h3>4️⃣ Hashtable</h3>
+                    <ul>
+                        <li>Legacy class, <strong>Synchronized</strong>.</li>
+                        <li>Null keys and Null values are <strong>NOT allowed</strong> (will throw <code>NullPointerException</code>).</li>
+                        <li><strong>Initial Capacity:</strong> 11</li>
+                        <li><strong>Load Factor:</strong> 0.75</li>
+                    </ul>
+
+                    <details>
+                        <summary>Specialized Map Implementations</summary>
+                        <div class="details-body">
+                            <ul>
+                                <li><strong>IdentityHashMap:</strong> Uses <code>==</code> operator for key comparison instead of <code>equals()</code>.</li>
+                                <li><strong>WeakHashMap:</strong> Keys are wrapped in WeakReferences. Garbage Collector can remove entries if keys are no longer in use.</li>
+                                <li><strong>Properties:</strong> Used to manage configuration files (.properties). Only allows Strings for keys and values.</li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <h2>10.8 Collections Utility Class</h2>
+                    <p>The <code>java.util.Collections</code> class provides static methods for operating on collections.</p>
+                    <ul>
+                        <li><code>sort(List l)</code>: Sorts elements in natural order.</li>
+                        <li><code>binarySearch(List l, Object key)</code>: Efficient search in sorted list.</li>
+                        <li><code>reverse(List l)</code>: Reverses the order of elements.</li>
+                        <li><code>synchronizedList/Set/Map()</code>: Returns thread-safe versions of collections.</li>
+                    </ul>
+
+                    <h2>10.9 Fail-Fast vs Fail-Safe Iterators</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Fail-Fast</th>
+                                <th>Fail-Safe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Concurrent Modification</td>
+                                <td>Throws <code>ConcurrentModificationException</code></td>
+                                <td>Does NOT throw exception</td>
+                            </tr>
+                            <tr>
+                                <td>Mechanism</td>
+                                <td>Works on original collection</td>
+                                <td>Works on a <strong>clone/copy</strong> of the collection</td>
+                            </tr>
+                            <tr>
+                                <td>Memory</td>
+                                <td>Efficient</td>
+                                <td>High overhead due to copying</td>
+                            </tr>
+                            <tr>
+                                <td>Examples</td>
+                                <td>ArrayList, HashSet, HashMap</td>
+                                <td>CopyOnWriteArrayList, ConcurrentHashMap</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
                 </section>
 
                 <section id="m11">
