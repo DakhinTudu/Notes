@@ -158,7 +158,7 @@
       position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width);
       background: var(--bg-color); z-index: 1100; padding: 24px 16px;
       transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex; flex-direction: column; border-right: 1px solid var(--border-color);
+      display: flex; flex-direction: column; overflow-y: auto; /* nav scroll */ border-right: 1px solid var(--border-color);
     }
 
     .sidebar-open nav { transform: translateX(0); }
@@ -402,7 +402,16 @@
         page-break-inside: avoid;
       }
     }
-  </style>
+  
+        /* Hide scrollbar for nav but keep it scrollable */
+        nav {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        nav::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 
 </head>
 

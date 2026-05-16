@@ -269,7 +269,7 @@
             transform: translateX(-100%);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
-            flex-direction: column;
+            flex-direction: column; overflow-y: auto; /* nav scroll */
             border-right: 1px solid var(--border-color);
         }
 
@@ -737,6 +737,15 @@
         table {
             page-break-inside: avoid;
         }
+        }
+    
+        /* Hide scrollbar for nav but keep it scrollable */
+        nav {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        nav::-webkit-scrollbar {
+            display: none;
         }
     </style>
 </head>
