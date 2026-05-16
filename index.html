@@ -1,321 +1,350 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Programming Notes</title>
-    <style>
-        :root {
-            --bg-color: #f8fafc;
-            --text-color: #1e293b;
-            --card-bg: #ffffff;
-            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --header-bg: #ffffff;
-            --accent-color: #3b82f6;
-            --input-bg: #ffffff;
-            --border-color: #e2e8f0;
-            --secondary-text: #64748b;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daxin.dev • Technical Mastery Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --bg-secondary: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --accent-color: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --glass-bg: rgba(255, 255, 255, 0.8);
+      --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --font-family: 'Inter', sans-serif;
+    }
 
-        [data-theme="dark"] {
-            --bg-color: #0f172a;
-            --text-color: #f1f5f9;
-            --card-bg: #1e293b;
-            --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5);
-            --header-bg: #1e293b;
-            --accent-color: #60a5fa;
-            --input-bg: #334155;
-            --border-color: #334155;
-            --secondary-text: #94a3b8;
-        }
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --bg-secondary: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --accent-color: #818cf8;
+      --accent-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      --glass-bg: rgba(15, 23, 42, 0.8);
+      --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
 
-        header {
-            background-color: var(--header-bg);
-            padding: 2rem 1rem;
-            text-align: center;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(8px);
-            background-color: rgba(var(--header-bg), 0.8);
-        }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem;
+    }
 
-        .header-content {
-            max-width: 800px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            position: relative;
-        }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        h1 {
-            font-size: 2rem;
-            font-weight: 700;
-        }
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        #theme-toggle {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: none;
-            border: 2px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
+    #theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
 
-        #theme-toggle:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
+    #theme-toggle:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-color);
+    }
 
-        .search-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-        }
+    .hero {
+      padding: 60px 20px;
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-        #search-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 2px solid var(--border-color);
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1rem;
-            outline: none;
-        }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
 
-        #search-input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
 
-        main {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+    }
 
-        .notes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
+    .search-container input {
+      width: 100%;
+      padding: 16px 20px 16px 48px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 1rem;
+      outline: none;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+    }
 
-        .note-card {
-            background-color: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 1rem;
-            box-shadow: var(--card-shadow);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+    .search-container input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
 
-        .note-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            border-color: var(--accent-color);
-        }
+    .search-container svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      pointer-events: none;
+    }
 
-        .note-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--accent-color);
-        }
+    main {
+      flex: 1;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
 
-        .note-description {
-            font-size: 0.95rem;
-            color: var(--secondary-text);
-        }
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
 
-        .hidden {
-            display: none;
-        }
+    .note-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 32px;
+      border-radius: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
 
-        footer {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--secondary-text);
-            font-size: 0.9rem;
-            margin-top: auto;
-        }
+    .note-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--accent-gradient);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
 
-        @media (max-width: 640px) {
-            header {
-                padding: 1rem;
-            }
+    .note-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--accent-color);
+      box-shadow: var(--shadow-lg);
+    }
 
-            .header-content {
-                gap: 1rem;
-            }
+    .note-card:hover::before {
+      opacity: 1;
+    }
 
-            h1 {
-                font-size: 1.5rem;
-                padding-right: 40px;
-                /* Space for absolute theme toggle if needed */
-            }
+    .note-card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
 
-            #theme-toggle {
-                position: absolute;
-                top: 0;
-                right: 0;
-                padding: 0.4rem;
-                font-size: 0.8rem;
-            }
+    .note-card p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
 
-            #theme-text {
-                display: none;
-                /* Hide text on small screens to save space */
-            }
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-color);
+      background: rgba(99, 102, 241, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      width: fit-content;
+    }
 
-            .notes-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      padding: 40px 20px;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 {
+        font-size: 2.25rem;
+      }
+
+      .notes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <header>
-        <div class="header-content">
-            <h1>📚 My Programming Notes</h1>
-            <button id="theme-toggle" aria-label="Toggle Dark Mode">
-                <span id="theme-icon">🌙</span>
-                <span id="theme-text">Dark Mode</span>
-            </button>
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Search notes by title..." aria-label="Search notes">
-            </div>
-        </div>
-    </header>
+  <header>
+    <div class="header-content">
+      <div class="logo">DAXIN.DEV</div>
+      <button id="theme-toggle" title="Toggle Theme" onclick="toggleTheme()">◑</button>
+    </div>
+  </header>
 
-    <main>
-        <section class="notes-grid" id="notes-grid">
-            <!-- Core Java Notes -->
-            <a href="core-java-notes.html" class="note-card">
-                <div class="note-title">Core Java Notes</div>
-                <div class="note-description">Comprehensive guide to Java fundamentals, OOPs, Collections, and Exception
-                    Handling.</div>
-            </a>
+  <section class="hero">
+    <h1>Technical Mastery <span
+        style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Notes</span>
+    </h1>
+    <p>A curated collection of deep-dives into modern backend engineering, performance tuning, and architectural
+      patterns.</p>
+    <div class="search-container">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="search" placeholder="Search topics (e.g. 'Kafka', 'DNS', 'Testing')..."
+        oninput="filterNotes()">
+    </div>
+  </section>
 
-            <!-- Junit & Mockito Notes -->
-            <a href="junit-mockito-testing.html" class="note-card">
-                <div class="note-title">JUnit & Mockito Testing</div>
-                <div class="note-description">Unit testing best practices using JUnit 5 and Mockito framework for Java
-                    applications.</div>
-            </a>
+  <main>
+    <div class="notes-grid" id="notes-grid">
+      <a href="backend-foundamentals.html" class="note-card">
+        <div class="tag">Foundation</div>
+        <h2>Backend Fundamentals</h2>
+        <p>Master the internet request journey, DNS, HTTP/3, and Spring Boot internal request lifecycles.</p>
+      </a>
 
-            <!-- Spring Boot Notes -->
-            <a href="spring-boot-notes.html" class="note-card">
-                <div class="note-title">Spring Boot Notes</div>
-                <div class="note-description">Modern Java development with Spring Boot, including REST APIs, JPA, and
-                    Security.</div>
-            </a>
+      <a href="core-java-notes.html" class="note-card">
+        <div class="tag">Java</div>
+        <h2>Core Java Mastery</h2>
+        <p>Deep-dive into OOP principles, Collections Framework, and advanced Exception handling.</p>
+      </a>
 
-            <!-- Docker Notes -->
-            <a href="docker.html" class="note-card">
-                <div class="note-title">Docker Mastery</div>
-                <div class="note-description">A backend engineer's guide to Dockerizing Spring Boot apps, including
-                    multi-stage builds and Docker Compose.</div>
-            </a>
-        </section>
-    </main>
+      <a href="junit-mockito-testing.html" class="note-card">
+        <div class="tag">Quality</div>
+        <h2>Testing & Mocking</h2>
+        <p>Expert-level unit testing strategies with JUnit 5 and professional Mockito patterns.</p>
+      </a>
 
+      <a href="kafka.html" class="note-card">
+        <div class="tag">Messaging</div>
+        <h2>Apache Kafka</h2>
+        <p>Event-driven architecture, producer/consumer internals, and distributed stream processing.</p>
+      </a>
 
-    <footer>
-        <p>&copy; <span id="year"></span> &bull; Hosted on GitHub Pages</p>
-    </footer>
+      <a href="docker.html" class="note-card">
+        <div class="tag">DevOps</div>
+        <h2>Docker for Backend</h2>
+        <p>Production-grade containerization, multi-stage builds, and microservices orchestration.</p>
+      </a>
+    </div>
+  </main>
 
-    <script>
-        // Set dynamic year
-        document.getElementById('year').textContent = new Date().getFullYear();
+  <footer>
+    <p>&copy; <span id="year"></span> Daxin.dev &bull; Built for Performance &bull; Hosted on GitHub Pages</p>
+  </footer>
 
-        // Dark Mode Toggle Logic
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const themeText = document.getElementById('theme-text');
-        const htmlElement = document.documentElement;
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Check for saved theme
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-theme', savedTheme);
-        updateThemeUI(savedTheme);
+    const toggleTheme = () => {
+      const html = document.documentElement;
+      const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+      localStorage.setItem('theme', t);
+      window.dispatchEvent(new CustomEvent('themeChanged'));
+    };
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
 
-            htmlElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeUI(newTheme);
-        });
+    const filterNotes = () => {
+      const q = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('.note-card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.classList.toggle('hidden', !text.includes(q));
+      });
+    };
 
-        function updateThemeUI(theme) {
-            if (theme === 'dark') {
-                themeIcon.textContent = '☀️';
-                themeText.textContent = 'Light Mode';
-            } else {
-                themeIcon.textContent = '🌙';
-                themeText.textContent = 'Dark Mode';
-            }
-        }
-
-        // Search Filtering Logic
-        const searchInput = document.getElementById('search-input');
-        const noteCards = document.querySelectorAll('.note-card');
-
-        searchInput.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-
-            noteCards.forEach(card => {
-                const title = card.querySelector('.note-title').textContent.toLowerCase();
-                const description = card.querySelector('.note-description').textContent.toLowerCase();
-
-                if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
-        });
-
-        // Add keyboard shortcut for search (focus on '/')
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '/' && document.activeElement !== searchInput) {
-                e.preventDefault();
-                searchInput.focus();
-            }
-        });
-    </script>
+    // Keyboard shortcut '/'
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        document.getElementById('search').focus();
+      }
+    });
+  </script>
 </body>
 
 </html>

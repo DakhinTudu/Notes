@@ -1,19 +1,27 @@
-# My Programming Notes 📚
+# Daxin.dev • Technical Mastery Notes 📚
 
-A collection of high-quality, premium technical notes for backend engineering.
+A high-performance, mobile-first collection of technical deep-dives for backend engineers. Built with a premium design system featuring glassmorphism, advanced search, and professional PDF export capabilities.
 
-## 🗒️ Available Notes
+## 🚀 Key Features
+- **Interactive Tree-Graph Directory**: A highly visual, dynamic CSS-based mindmap layout for exploring notes.
+- **Premium Aesthetics**: Glassmorphic UI with vibrant gradients, custom diagrams, and smooth transitions.
+- **Mobile-First Experience**: Optimized for all devices with a slide-in navigation drawer and responsive grids.
+- **Dynamic Search**: Instantly filter topics and branches natively without page reloads.
+- **PDF-Ready Engineering**: Tailored, isolated print architectures for professional, single-page A4 cover PDF exports.
+- **Theme Awareness**: Built-in Dark Mode that respects system preferences and saves state.
 
-- [Core Java Notes](core-java-notes.html)
-- [Docker Mastery](docker.html) (New)
-- [JUnit & Mockito Testing](junit-mockito-testing.html)
-- [Spring Boot Notes](spring-boot-notes.html)
+## 🗒️ Documentation Library
 
-## 🛠️ Features
-- **Responsive Design**: Mobile-friendly reading experience.
-- **Searchable**: Real-time filtering of modules.
-- **Dark Mode**: Synced across all pages.
-- **PDF Export**: Premium print styling for offline reading.
+- [**Backend Fundamentals**](backend-foundamentals.html) — Internet journey, DNS, HTTP/3, and request lifecycles.
+- [**Core Java Mastery**](core-java-notes.html) — Foundations, OOP, Collections, and Exception handling.
+- [**JUnit & Mockito**](junit-mockito-testing.html) — Advanced unit testing and mocking strategies.
+- [**Apache Kafka**](kafka.html) — Event-driven architecture and distributed messaging.
+- [**Docker Mastery**](docker.html) — Professional containerization and microservices orchestration.
+
+## 🛠️ Project Structure
+- `index.html`: Premium landing portal.
+- `NOTES_TEMPLATE_GUIDE.md`: Standardization guide for new documentation.
+- `*.html`: Module-specific technical notes.
 
 ---
-Hosted on [GitHub Pages](https://dakhintudu.github.io/Notes/).
+Hosted on [**GitHub Pages**](https://dakhintudu.github.io/Notes/).
