@@ -234,7 +234,18 @@
     .print-only { display: none !important; }
     .print-footer { display: none !important; }
 
-    @media print {
+    @page { size: A4; margin: 0; }
+@media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        margin: 10mm; /* Add some base margin since @page is 0 */
+      }
+      .pdf-cover {
+        margin: -10mm !important; /* Pull cover back out to edges */
+      }
       pre { 
         background: #f8fafc !important; 
         color: #0f172a !important; 
