@@ -371,7 +371,10 @@
 <a href="#29-tracking-online-users-websocket-events" onclick="if(window.innerWidth < 1024) toggleSidebar()">29. Tracking Online Users (WebSocket Events)</a>
 <a href="#30-securing-websockets-authentication-interceptors" onclick="if(window.innerWidth < 1024) toggleSidebar()">30. Securing WebSockets (Authentication & Interceptors)</a>
 <a href="#31-error-handling-in-controllers" onclick="if(window.innerWidth < 1024) toggleSidebar()">31. Error Handling in Controllers</a>
-<a href="#32-final-understanding" onclick="if(window.innerWidth < 1024) toggleSidebar()">32. Final Understanding</a>
+<a href="#32-spring-boot-websocket-classes-and-interfaces-reference" onclick="if(window.innerWidth < 1024) toggleSidebar()">32. Core Spring Boot WebSocket Classes &amp; Interfaces Reference</a>
+<a href="#33-horizontal-scaling-and-load-balancing" onclick="if(window.innerWidth < 1024) toggleSidebar()">33. Horizontal Scaling &amp; Load Balancing</a>
+<a href="#34-integration-testing-spring-boot-websockets" onclick="if(window.innerWidth < 1024) toggleSidebar()">34. Integration Testing WebSockets</a>
+<a href="#35-final-understanding" onclick="if(window.innerWidth < 1024) toggleSidebar()">35. Final Understanding</a>
       <div class="nav-footer">
         <button class="download-btn" onclick="downloadPDF()">Export as PDF</button>
       </div>
@@ -1659,8 +1662,635 @@ public class ChatController {
 
 
 </section>
-<section id="32-final-understanding">
-<h2>32. Final Understanding</h2>
+<section id="32-spring-boot-websocket-classes-and-interfaces-reference">
+<h2>32. Core Spring Boot WebSocket Classes &amp; Interfaces Reference</h2>
+
+<p>
+Spring Boot WebSocket infrastructure abstracts raw TCP socket communication into structured message-driven flows using a robust set of classes and interfaces. Below is the comprehensive guide to the core components, their structural roles, and concrete code implementations.
+</p>
+
+<div class="callout note">
+<h3>Quick Summary Reference</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Class / Interface</th>
+      <th>Type</th>
+      <th>Primary Responsibility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>WebSocketMessageBrokerConfigurer</code></td>
+      <td>Interface</td>
+      <td>The main configuration interface to enable and customize the STOMP message broker.</td>
+    </tr>
+    <tr>
+      <td><code>StompEndpointRegistry</code></td>
+      <td>Interface</td>
+      <td>Registers the HTTP URLs where clients handshake to initiate a WebSocket connection.</td>
+    </tr>
+    <tr>
+      <td><code>MessageBrokerRegistry</code></td>
+      <td>Class</td>
+      <td>Configures destination routing prefixes and chooses/tunes the message broker.</td>
+    </tr>
+    <tr>
+      <td><code>SimpMessagingTemplate</code></td>
+      <td>Class</td>
+      <td>Allows backend code (Services, Jobs) to publish messages programmatically to clients.</td>
+    </tr>
+    <tr>
+      <td><code>ChannelInterceptor</code></td>
+      <td>Interface</td>
+      <td>Intercepts inbound, outbound, or broker messages for tasks like JWT authentication.</td>
+    </tr>
+    <tr>
+      <td><code>StompHeaderAccessor</code></td>
+      <td>Class</td>
+      <td>Provides type-safe reading and writing of STOMP frame headers (e.g., tokens, session attributes).</td>
+    </tr>
+    <tr>
+      <td><code>HandshakeInterceptor</code></td>
+      <td>Interface</td>
+      <td>Intercepts the initial HTTP upgrade request before it becomes a WebSocket session.</td>
+    </tr>
+    <tr>
+      <td><code>HandshakeHandler</code></td>
+      <td>Interface</td>
+      <td>Processes the low-level upgrade, often customized to assign security <code>Principal</code> user IDs.</td>
+    </tr>
+    <tr>
+      <td><code>AbstractSubProtocolEvent</code></td>
+      <td>Class</td>
+      <td>Base event class for WebSocket/STOMP lifecycle event notifications (e.g., connect, disconnect).</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<hr/>
+
+<h3>1. WebSocketMessageBrokerConfigurer (Interface)</h3>
+<p>
+This interface is implemented by configuration classes annotated with <code>@EnableWebSocketMessageBroker</code>. It provides callbacks to customize Spring Boot's WebSocket message handling.
+</p>
+
+<div class="callout note">
+<h4>Under the Hood:</h4>
+<p>
+When Spring starts up, it scans for classes implementing this configurer and calls their configuration hooks to populate the message channels, endpoints mapping, and message broker.
+</p>
+</div>
+
+<pre>
+@Configuration
+@EnableWebSocketMessageBroker
+public class CustomWebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Defines the physical endpoint for WebSocket handshake connection
+        registry.addEndpoint("/ws-connect")
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        // Sets client-to-server destination prefix
+        registry.setApplicationDestinationPrefixes("/app");
+        // Sets up in-memory broker with prefixes for client subscriptions
+        registry.enableSimpleBroker("/topic", "/queue");
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        // Registers custom channel interceptors
+        registration.interceptors(new SecurityChannelInterceptor());
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        // Low-level buffer size, message size limits and send timeouts tuning
+        registration.setMessageSizeLimit(128 * 1024)       // Max size: 128KB
+                    .setSendTimeLimit(15 * 1000)            // Send timeout: 15s
+                    .setSendBufferSizeLimit(512 * 1024);    // Buffer limit: 512KB
+    }
+}
+</pre>
+
+<hr/>
+
+<h3>2. StompEndpointRegistry (Interface)</h3>
+<p>
+Configures HTTP handshake endpoints mapping to underlying WebSocket handlers. Under the hood, this translates paths into a <code>SimpleUrlHandlerMapping</code> to route requests to <code>WebSocketHttpRequestHandler</code>.
+</p>
+
+<div class="callout note">
+<h4>Common Configuration Options:</h4>
+<ul>
+  <li><code>addEndpoint(String... paths)</code>: Defines the handshake URI path.</li>
+  <li><code>setAllowedOriginPatterns(String... patterns)</code>: Configures allowed origins for CORS.</li>
+  <li><code>withSockJS()</code>: Enables SockJS fallback protocol.</li>
+  <li><code>addInterceptors(HandshakeInterceptor... interceptors)</code>: Chain HTTP handshakes.</li>
+  <li><code>setHandshakeHandler(HandshakeHandler handshakeHandler)</code>: Customizes raw upgrade mechanism.</li>
+</ul>
+</div>
+
+<pre>
+@Override
+public void registerStompEndpoints(StompEndpointRegistry registry) {
+    registry.addEndpoint("/chat-socket")
+            .setAllowedOrigins("http://localhost:3000", "https://mychat.com")
+            .addInterceptors(new CustomHandshakeInterceptor())
+            .setHandshakeHandler(new CustomHandshakeHandler())
+            .withSockJS();
+}
+</pre>
+
+<hr/>
+
+<h3>3. MessageBrokerRegistry (Class)</h3>
+<p>
+Maintains destination prefixes and handles the activation of simple (in-memory) or external message brokers (RabbitMQ/ActiveMQ).
+</p>
+
+<div class="callout note">
+<h4>Simple Broker vs Broker Relay:</h4>
+<p>
+<code>enableSimpleBroker()</code> spins up an in-memory broker within Spring's JVM. <code>enableStompBrokerRelay()</code> starts a TCP relay client that connects to an external broker service (which must speak STOMP protocol, such as RabbitMQ's STOMP plugin).
+</p>
+</div>
+
+<pre>
+@Override
+public void configureMessageBroker(MessageBrokerRegistry registry) {
+    // Client-to-server destination prefix (intercepted by @MessageMapping)
+    registry.setApplicationDestinationPrefixes("/app");
+    
+    // Configures Spring's TCP Broker Relay to connect to external RabbitMQ
+    registry.enableStompBrokerRelay("/topic", "/queue")
+            .setRelayHost("rabbitmq.local")
+            .setRelayPort(61613) // Default STOMP Port
+            .setClientLogin("user")
+            .setClientPasscode("password")
+            .setSystemLogin("admin")
+            .setSystemPasscode("admin-pass");
+
+    // Sets prefix for user-specific messaging (e.g. /user/queue/private)
+    registry.setUserDestinationPrefix("/user");
+}
+</pre>
+
+<hr/>
+
+<h3>4. SimpMessagingTemplate (Class)</h3>
+<p>
+Implements <code>SimpMessageSendingOperations</code>. This class allows programmatically sending messages to subscribers from anywhere in the application (like database triggers, background threads, REST controllers, or @Scheduled tasks).
+</p>
+
+<div class="callout note">
+<h4>Internal Routing Flow:</h4>
+<p>
+When you call <code>convertAndSendToUser(username, destination, payload)</code>, the template resolves the username to their active STOMP session, rewrites the destination to <code>/user/{username}-user{sessionId}/{destination}</code> under the hood, and places it directly on the outbound message channel.
+</p>
+</div>
+
+<pre>
+@RestController
+@RequestMapping("/api/chat")
+public class RestChatController {
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public RestChatController(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    // HTTP Endpoint triggers a message to WebSocket clients
+    @PostMapping("/broadcast")
+    public ResponseEntity&lt;Void&gt; sendBroadcast(@RequestBody String message) {
+        // Send directly to the WebSocket topic /topic/announcements
+        messagingTemplate.convertAndSend("/topic/announcements", message);
+        return ResponseEntity.ok().build();
+    }
+
+    // Sends private notification to user
+    @PostMapping("/notify/{username}")
+    public ResponseEntity&lt;Void&gt; sendNotification(@PathVariable String username, @RequestBody String alert) {
+        // Resolves user's session and sends to /user/&lt;username&gt;/queue/alerts
+        messagingTemplate.convertAndSendToUser(username, "/queue/alerts", alert);
+        return ResponseEntity.ok().build();
+    }
+}
+</pre>
+
+<hr/>
+
+<h3>5. ChannelInterceptor (Interface)</h3>
+<p>
+Acts as a intercepting filter for messages passing through the client inbound/outbound channels or broker channels. This is the optimal place to implement token authentication (JWT), logging, or auditing.
+</p>
+
+<div class="callout note">
+<h4>Common Interceptor Methods:</h4>
+<ul>
+  <li><code>preSend(Message&lt;?&gt; msg, MessageChannel ch)</code>: Invoked before sending the message. Return <code>null</code> to block the message.</li>
+  <li><code>postSend(Message&lt;?&gt; msg, MessageChannel ch, boolean sent)</code>: Invoked after a successful channel write.</li>
+  <li><code>afterSendCompletion(Message&lt;?&gt; msg, MessageChannel ch, boolean sent, Exception ex)</code>: Invoked after sending completes.</li>
+</ul>
+</div>
+
+<pre>
+public class JwtAuthenticationInterceptor implements ChannelInterceptor {
+
+    @Override
+    public Message&lt;?&gt; preSend(Message&lt;?&gt; message, MessageChannel channel) {
+        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+        // Intercept CONNECT commands to authenticate users
+        if (accessor != null &amp;&amp; StompCommand.CONNECT.equals(accessor.getCommand())) {
+            String token = accessor.getFirstNativeHeader("Authorization");
+            if (token != null &amp;&amp; token.startsWith("Bearer ")) {
+                String jwt = token.substring(7);
+                if (validateToken(jwt)) {
+                    Principal principal = extractPrincipal(jwt);
+                    accessor.setUser(principal); // Associate security identity
+                } else {
+                    throw new MessageDeliveryException("Invalid JWT authentication token.");
+                }
+            }
+        }
+        return message; // Pass the message down the pipeline
+    }
+
+    private boolean validateToken(String token) { /* Token check logic */ return true; }
+    private Principal extractPrincipal(String token) { return () -&gt; "authenticated_user"; }
+}
+</pre>
+
+<hr/>
+
+<h3>6. StompHeaderAccessor &amp; MessageHeaderAccessor (Classes)</h3>
+<p>
+Spring's raw <code>Message&lt;?&gt;</code> represents headers as an immutable map. <code>StompHeaderAccessor</code> provides wrapper methods to easily read, write, and manipulate STOMP-specific headers, frame types, commands, and session details.
+</p>
+
+<div class="callout note">
+<h4>Session Attributes:</h4>
+<p>
+Through <code>getSessionAttributes()</code>, you can store data associated with the client socket session, which will persist across successive messages sent by the client.
+</p>
+</div>
+
+<pre>
+// Wrapping a raw spring-messaging Message
+public void processMessage(Message&lt;?&gt; rawMessage) {
+    StompHeaderAccessor accessor = StompHeaderAccessor.wrap(rawMessage);
+    
+    // Access native STOMP headers
+    String origin = accessor.getFirstNativeHeader("Origin");
+    
+    // Access STOMP commands
+    StompCommand command = accessor.getCommand();
+    
+    // Read custom session attributes
+    Map&lt;String, Object&gt; attrs = accessor.getSessionAttributes();
+    String currentRoom = (String) attrs.get("room_id");
+}
+</pre>
+
+<hr/>
+
+<h3>7. HandshakeInterceptor (Interface)</h3>
+<p>
+Runs during the HTTP Handshake phase. It allows copying standard HTTP attributes (such as cookies, query parameters, or <code>HttpSession</code> attributes) into the WebSocket session attributes map, making them available to STOMP message interceptors and controllers.
+</p>
+
+<div class="callout note">
+<h4>Key Methods:</h4>
+<ul>
+  <li><code>beforeHandshake(...)</code>: Invoked before upgrading. Return <code>false</code> to cancel connection.</li>
+  <li><code>afterHandshake(...)</code>: Invoked after upgrade succeeds.</li>
+</ul>
+</div>
+
+<pre>
+public class CopySessionHandshakeInterceptor implements HandshakeInterceptor {
+
+    @Override
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, 
+                                   WebSocketHandler wsHandler, Map&lt;String, Object&gt; attributes) throws Exception {
+        if (request instanceof ServletServerHttpRequest) {
+            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
+            HttpServletRequest httpServletRequest = servletRequest.getServletRequest();
+            
+            // Extract attributes from HttpSession
+            String userId = (String) httpServletRequest.getSession().getAttribute("userId");
+            if (userId != null) {
+                // Copy into WebSocket session attributes map
+                attributes.put("userId", userId);
+            }
+        }
+        return true; // Return true to continue upgrade
+    }
+
+    @Override
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, 
+                               WebSocketHandler wsHandler, Exception exception) {}
+}
+</pre>
+
+<hr/>
+
+<h3>8. HandshakeHandler &amp; DefaultHandshakeHandler (Interface / Class)</h3>
+<p>
+Responsible for handling the actual WebSocket protocol negotiation and connection upgrade from HTTP to TCP. You typically extend <code>DefaultHandshakeHandler</code> to assign a security Principal to the connection based on attributes gathered during the handshake.
+</p>
+
+<pre>
+public class CustomHandshakeHandler extends DefaultHandshakeHandler {
+
+    @Override
+    protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, 
+                                      Map&lt;String, Object&gt; attributes) {
+        // Extract the user identity copied from HandshakeInterceptor attributes
+        String userId = (String) attributes.get("userId");
+        if (userId != null) {
+            // Assign this principal to the WebSocket connection.
+            // Spring will map private /user messages to this Principal.
+            return () -&gt; userId;
+        }
+        return null; // Anonymous user
+    }
+}
+</pre>
+
+<hr/>
+
+<h3>9. WebSocket Application Events (Classes)</h3>
+<p>
+Spring publishes lifecycle events via <code>ApplicationEventPublisher</code> that you can listen to using <code>@EventListener</code> to track user logins, logouts, topic subscriptions, or connections.
+</p>
+
+<div class="callout note">
+<h4>Available Lifecycle Events:</h4>
+<ul>
+  <li><code>SessionConnectEvent</code>: Triggered when a raw STOMP CONNECT frame is received.</li>
+  <li><code>SessionConnectedEvent</code>: Triggered when the server returns a STOMP CONNECTED acknowledgement frame.</li>
+  <li><code>SessionSubscribeEvent</code>: Triggered when a client subscribes to a topic.</li>
+  <li><code>SessionUnsubscribeEvent</code>: Triggered when a client unsubscribes.</li>
+  <li><code>SessionDisconnectEvent</code>: Triggered when the physical TCP socket or STOMP session terminates.</li>
+</ul>
+</div>
+
+<pre>
+@Component
+public class PresenceEventListener {
+
+    // Track active user count or state
+    private final ConcurrentHashMap&lt;String, String&gt; activeSessions = new ConcurrentHashMap&lt;&gt;();
+
+    @EventListener
+    public void handleConnect(SessionConnectedEvent event) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        String sessionId = accessor.getSessionId();
+        Principal user = accessor.getUser();
+        
+        if (user != null) {
+            activeSessions.put(sessionId, user.getName());
+            System.out.println("User " + user.getName() + " joined chat session: " + sessionId);
+        }
+    }
+
+    @EventListener
+    public void handleDisconnect(SessionDisconnectEvent event) {
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        String sessionId = accessor.getSessionId();
+        String username = activeSessions.remove(sessionId);
+        
+        if (username != null) {
+            System.out.println("User " + username + " left session: " + sessionId);
+        }
+    }
+}
+</pre>
+
+<hr/>
+
+<h3>10. Annotation Routing Mapping (@MessageMapping, @SendTo, @SendToUser)</h3>
+<p>
+Placed on controller methods to control incoming routing and response distribution.
+</p>
+
+<pre>
+@Controller
+public class WebSocketChatController {
+
+    // Maps messages sent to /app/chat.send
+    // Broadcasts the serialized return value to all subscribers of /topic/global-chat
+    @MessageMapping("/chat.send")
+    @SendTo("/topic/global-chat")
+    public ChatMessage broadcast(ChatMessage message) {
+        message.setTimestamp(System.currentTimeMillis());
+        return message; 
+    }
+
+    // Maps messages sent to /app/chat.private
+    // Sends the return status solely to the sender at /user/&lt;username&gt;/queue/status
+    @MessageMapping("/chat.private")
+    @SendToUser("/queue/status")
+    public MessageStatus privateReply(PrivateMessage msg) {
+        // Send message to receiver
+        return new MessageStatus("Delivered successfully");
+    }
+}
+</pre>
+
+</section>
+
+<section id="33-horizontal-scaling-and-load-balancing">
+<h2>33. Horizontal Scaling &amp; Load Balancing</h2>
+
+<p>
+In a multi-instance (clustered) production environment, scaling WebSockets presents unique challenges because WebSocket connections are <b>stateful and persistent</b>.
+</p>
+
+<div class="callout warning">
+<h3>The Stateful Challenge</h3>
+<p>
+Unlike REST endpoints (which are stateless), a client keeps a single TCP connection open with a specific server instance. If Client A is connected to Instance 1, and Client B is connected to Instance 2:
+</p>
+<ul>
+  <li>Instance 1 cannot send messages directly to Client B.</li>
+  <li>If Instance 1 broadcasts a message to <code>/topic/chat</code>, only clients connected to Instance 1 will receive it.</li>
+</ul>
+</div>
+
+<h3>1. Solving the Broadcast Problem with Shared Brokers</h3>
+<p>
+To scale horizontally, you must replace Spring’s in-memory <b>Simple Broker</b> with a shared external message broker (such as <b>RabbitMQ</b> or <b>ActiveMQ</b>) via <code>enableStompBrokerRelay()</code>.
+</p>
+
+<div class="mermaid">
+flowchart TD
+    subgraph Clients
+        C1[Client A]
+        C2[Client B]
+    end
+    subgraph LB[Load Balancer / Nginx]
+        Proxy[Nginx Load Balancer]
+    end
+    subgraph Nodes[Spring Boot Cluster]
+        S1[Server Node 1]
+        S2[Server Node 2]
+    end
+    subgraph Broker[Shared Broker]
+        Topic[RabbitMQ STOMP /topic/chat]
+    end
+
+    C1 -->|TCP Connection| Proxy
+    Proxy -->|Route to Node 1| S1
+    C2 -->|TCP Connection| Proxy
+    Proxy -->|Route to Node 2| S2
+
+    S1 <-->|STOMP Relay Link| Topic
+    S2 <-->|STOMP Relay Link| Topic
+</div>
+
+<p>
+<b>How it works:</b> When Client A publishes a message to Node 1, Node 1 forwards it to RabbitMQ. RabbitMQ distributes (fans out) the message to all server nodes (Node 1 and Node 2) subscribed to that topic. Node 2 then pushes the message down the socket to Client B.
+</p>
+
+<hr/>
+
+<h3>2. Load Balancer Configuration &amp; Sticky Sessions</h3>
+<p>
+When configuring load balancers (like Nginx, HAProxy, AWS ALB) in front of a Spring Boot WebSocket cluster:
+</p>
+
+<div class="callout note">
+<h4>Key Requirements:</h4>
+<ul>
+  <li><b>WebSocket Upgrades:</b> The load balancer must be configured to pass the <code>Upgrade</code> and <code>Connection</code> HTTP headers. Without this, the handshake will fail.</li>
+  <li><b>Sticky Sessions (Session Affinity):</b> Absolutely critical if you use **SockJS fallbacks** (like HTTP Long Polling). Long polling consists of consecutive, separate HTTP requests representing the same logical connection. If Request 1 hits Node 1 and Request 2 hits Node 2, the SockJS session will be lost and errors will be thrown.</li>
+  <li><b>Connection Timeouts:</b> WebSockets can close due to inactivity. Ensure the load balancer's idle timeout is set high enough, and keep-alive heartbeats are configured on the client/broker.</li>
+</ul>
+</div>
+
+<h4>Example Nginx Proxy Configuration:</h4>
+<pre>
+http {
+    upstream websocket_cluster {
+        # enable sticky sessions using ip_hash or cookies
+        ip_hash;
+        server backend1.example.com:8080;
+        server backend2.example.com:8080;
+    }
+
+    server {
+        listen 80;
+
+        location /ws-connect/ {
+            proxy_pass http://websocket_cluster;
+            proxy_http_version 1.1;
+            
+            # Critical headers for upgrading HTTP to WebSocket
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            # Increase timeouts to prevent early disconnection
+            proxy_read_timeout 86400s;
+            proxy_send_timeout 86400s;
+        }
+    }
+}
+</pre>
+
+</section>
+
+<section id="34-integration-testing-spring-boot-websockets">
+<h2>34. Integration Testing WebSockets</h2>
+
+<p>
+Testing WebSockets in Spring Boot requires simulating a running server and connecting as a client asynchronously. Spring Boot's integration testing suite allows connecting to a running server using <code>WebSocketStompClient</code>.
+</p>
+
+<div class="callout note">
+<h3>Testing Strategy</h3>
+<p>
+Since WebSocket messaging is asynchronous, test methods must wait for messages using synchronization classes (like <code>CompletableFuture</code> or <code>CountDownLatch</code>). If the message is not received within a timeout window, the test fails.
+</p>
+</div>
+
+<h3>Example WebSocket Integration Test:</h3>
+<pre>
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class WebSocketChatIntegrationTest {
+
+    @LocalServerPort
+    private int port;
+
+    private WebSocketStompClient stompClient;
+
+    @BeforeEach
+    public void setup() {
+        // Configure standard client transport with SockJS support
+        this.stompClient = new WebSocketStompClient(
+            new SockJsClient(List.of(new WebSocketTransport(new StandardWebSocketClient())))
+        );
+        
+        // Configure message converters (Jackson JSON serializer)
+        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
+    }
+
+    @Test
+    public void testPublishAndSubscribeFlow() throws Exception {
+        CompletableFuture&lt;ChatMessage&gt; completableFuture = new CompletableFuture&lt;&gt;();
+        String wsUrl = "ws://localhost:" + port + "/ws-connect";
+
+        // 1. Handshake and connect to the endpoint
+        StompSession session = stompClient
+            .connectAsync(wsUrl, new StompSessionHandlerAdapter() {})
+            .get(3, TimeUnit.SECONDS); // Timeout after 3 seconds
+
+        // 2. Subscribe to the public topic
+        session.subscribe("/topic/global-chat", new StompFrameHandler() {
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return ChatMessage.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                // Complete the future when the message arrives
+                completableFuture.complete((ChatMessage) payload);
+            }
+        });
+
+        // 3. Publish a message to the controller destination
+        ChatMessage sentMessage = new ChatMessage("Alice", "Hello Spring WebSockets!");
+        session.send("/app/chat.send", sentMessage);
+
+        // 4. Assert that the message is received asynchronously on the topic subscription
+        ChatMessage receivedMessage = completableFuture.get(5, TimeUnit.SECONDS);
+        
+        assertNotNull(receivedMessage);
+        assertEquals("Alice", receivedMessage.getSender());
+        assertEquals("Hello Spring WebSockets!", receivedMessage.getContent());
+    }
+}
+</pre>
+
+</section>
+
+<section id="35-final-understanding">
+<h2>35. Final Understanding</h2>
 
 
 <div class="callout note">
@@ -1676,6 +2306,8 @@ If you truly understand:
 <li>Inbound / Outbound Channels & Interceptors</li>
 <li>Subscriptions & Session Management</li>
 <li>Message Mapping & Error Handling</li>
+<li>Core Spring Boot WebSocket Classes, Interfaces, and Events</li>
+<li>Horizontal Scaling & Integration Testing</li>
 </ul>
 
 <p>
