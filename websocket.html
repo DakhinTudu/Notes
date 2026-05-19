@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring Boot WebSocket + STOMP Complete Deep Dive</title>
+  
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+  </script>
+
+  <style>
+    /* --- Mobile First Strategy --- */
+    :root {
+      --bg-color: #ffffff;
+      --bg-secondary: #fbfcfe;
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --accent-color: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --note-bg: #f5f7ff;
+      --note-border: #818cf8;
+      --warning-bg: #fffaf5;
+      --warning-border: #fb923c;
+      --font-family: 'Inter', sans-serif;
+      --mono-font: 'JetBrains Mono', monospace;
+      --header-height: 64px;
+      --sidebar-width: 280px;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --bg-secondary: #1e293b;
+      --glass-bg: rgba(15, 23, 42, 0.9);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --accent-color: #818cf8;
+      --accent-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --note-bg: #1e293b;
+      --note-border: #6366f1;
+      --warning-bg: #2a2010;
+      --warning-border: #fb923c;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0; font-family: var(--font-family);
+      background: var(--bg-color); color: var(--text-primary);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+    header {
+      position: sticky; top: 0; height: var(--header-height);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 16px; border-bottom: 1px solid var(--border-color);
+      background: var(--glass-bg); backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px); z-index: 1000;
+    }
+
+    #progress-bar {
+      position: absolute; bottom: -1px; left: 0; height: 2px;
+      background: var(--accent-gradient); width: 0%; transition: width 0.1s ease;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    #menu-toggle {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      font-size: 1.2rem; color: var(--text-primary); cursor: pointer;
+      width: 40px; height: 40px; border-radius: 10px;
+    }
+
+    header h1 {
+      font-size: 0.85rem; margin: 0; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+    }
+
+    header h1 span { background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+
+    header input {
+      width: 100%; padding: 10px 12px 10px 40px; border: 1px solid var(--border-color);
+      border-radius: 12px; background: var(--bg-secondary); color: var(--text-primary);
+      font-size: 0.9rem; outline: none; transition: all 0.3s ease;
+    }
+
+    .search-wrapper {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color); z-index: 10; display: none;
+      align-items: center; padding: 0 16px;
+    }
+
+    .search-wrapper.active { display: flex; }
+
+    #search-close { background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); padding: 8px; cursor: pointer; }
+
+    #search-toggle {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .search-wrapper { position: relative; display: flex; background: transparent; padding: 0; width: 280px; }
+      #search-toggle, #search-close { display: none !important; }
+      header input { width: 280px; }
+      header input:focus { width: 320px; border-color: var(--accent-color); }
+    }
+
+    #theme {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    nav {
+      position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width);
+      background: var(--bg-color); z-index: 1100; padding: 24px 16px;
+      transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-color);
+    }
+
+    .sidebar-open nav { transform: translateX(0); }
+
+    #backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px); z-index: 1050; display: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+
+    .sidebar-open #backdrop { display: block; opacity: 1; }
+
+    nav h2 { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); margin: 24px 0 8px 12px; font-weight: 800; letter-spacing: 1px; }
+
+    nav a { padding: 12px 16px; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; border-radius: 12px; transition: all 0.2s ease; }
+
+    nav a:hover, nav a.active { color: var(--accent-color); background: var(--bg-secondary); }
+
+    .nav-footer { margin-top: auto; padding-top: 20px; }
+
+    .download-btn {
+      width: 100%; padding: 10px 16px; background: var(--accent-gradient);
+      color: white; border: none; border-radius: 10px; font-weight: 600;
+      font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; transition: all 0.2s ease;
+    }
+
+    main { flex: 1; overflow-y: auto; padding: 32px 20px; scroll-behavior: smooth; }
+
+    h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    h2::before { content: ''; width: 4px; height: 20px; background: var(--accent-gradient); border-radius: 2px; }
+
+    .callout { padding: 20px; border-radius: 16px; margin: 24px 0; border: 1px solid; display: flex; flex-direction: column; gap: 8px; }
+    .note { background: var(--note-bg); border-color: var(--note-border); }
+    .warning { background: var(--warning-bg); border-color: var(--warning-border); }
+
+    pre { padding: 20px; border-radius: 16px; background: var(--code-bg); color: var(--code-text); overflow-x: auto; margin: 24px 0; border: 1px solid var(--border-color); }
+
+    table{
+      border-collapse: collapse;
+      width:100%;
+      margin: 20px 0;
+    }
+    table td, table th{
+      border:1px solid var(--border-color);
+      padding:12px;
+    }
+
+    @media (min-width: 1024px) {
+      .app { display: grid; grid-template-areas: "header header" "sidebar main"; grid-template-columns: var(--sidebar-width) 1fr; grid-template-rows: var(--header-height) 1fr; }
+      nav { grid-area: sidebar; position: static; transform: none; padding: 40px 24px; background: var(--bg-secondary); }
+      #menu-toggle, #backdrop { display: none !important; }
+      main { grid-area: main; padding: 60px 40px; }
+    }
+
+    .hidden { display: none !important; }
+
+    /* --- Architectural PDF Export Styles --- */
+    .print-only { display: none !important; }
+    .print-footer { display: none !important; }
+
+    @page { size: A4; margin: 0; }
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        margin: 10mm;
+      }
+      .pdf-cover {
+        margin: -10mm !important;
+      }
+      pre { 
+        background: #f8fafc !important; 
+        color: #0f172a !important; 
+        border: 1px solid #cbd5e1 !important; 
+        box-shadow: none !important;
+      }
+      pre code, :not(pre) > code {
+        color: #0f172a !important;
+        background: #f1f5f9 !important;
+      }
+      .callout {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      .callout.note { border-left: 4px solid #6366f1 !important; }
+      .callout.warning { border-left: 4px solid #fb923c !important; }
+
+      .print-only { display: block !important; }
+      .print-footer { 
+        display: block !important; position: fixed; bottom: 5mm; right: 10mm; 
+        font-size: 8pt; color: #94a3b8; font-weight: 600;
+      }
+      header, nav, #backdrop, .download-btn, #theme, #search-toggle { display: none !important; }
+      
+      body, .app, main { 
+        display: block !important; height: auto !important; 
+        overflow: visible !important; background: white !important; color: black !important;
+      }
+      
+      main { padding: 0 !important; margin: 0 !important; }
+
+      .pdf-cover {
+        display: flex !important; flex-direction: row;
+        width: 210mm; height: 297mm; text-align: left; page-break-after: always;
+        background: white; margin: 0 !important; padding: 0 !important;
+        box-sizing: border-box; overflow: hidden;
+      }
+
+      .pdf-cover .sidebar {
+        width: 60mm; background: #4f46e5; display: flex;
+        flex-direction: column; justify-content: flex-end;
+        padding: 40px; color: white;
+      }
+
+      .pdf-cover .main-area {
+        flex: 1; padding: 80px 50px; display: flex;
+        flex-direction: column; justify-content: center;
+      }
+
+      .pdf-cover .logo-vertical {
+        font-size: 24pt; font-weight: 900; letter-spacing: 6px;
+        writing-mode: vertical-rl; transform: rotate(180deg);
+        opacity: 0.9; margin-bottom: 20px;
+      }
+
+      .pdf-cover .badge {
+        background: #f1f5f9; color: #4f46e5; padding: 8px 16px;
+        border-radius: 99px; font-size: 11pt; font-weight: 800;
+        width: fit-content; margin-bottom: 24px; text-transform: uppercase;
+      }
+
+      .pdf-cover h1 {
+        font-size: 56pt !important; font-weight: 900; line-height: 1.1;
+        color: #0f172a !important; margin: 0 0 20px 0 !important;
+        border: none !important; letter-spacing: -2px;
+      }
+
+      .pdf-cover .subtitle { font-size: 18pt; color: #475569; line-height: 1.4; margin-bottom: 60px; max-width: 450px; }
+      .pdf-cover .author-section { margin-top: auto; }
+      .pdf-cover .author-label { font-size: 10pt; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 700; }
+      .pdf-cover .author-name { font-size: 20pt; font-weight: 800; color: #0f172a; }
+
+      section { page-break-inside: auto; margin-bottom: 30pt; display: block !important; }
+      h1, h2, h3 { page-break-after: avoid; }
+      pre, .callout, table { page-break-inside: avoid; }
+    }
+  
+    nav {
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+    nav::-webkit-scrollbar {
+        display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="print-footer">daxin.dev notes</div>
+
+  <div class="print-only pdf-cover">
+    <div class="sidebar">
+      <div class="logo-vertical">DAXIN.DEV</div>
+    </div>
+    <div class="main-area">
+      <div class="badge">Mastery Series • 2026</div>
+      <h1>WEBSOCKET<br>STOMP</h1>
+      <p class="subtitle">Deep-dive into Spring Boot WebSocket, STOMP routing, and real-time architectures.</p>
+      <div class="author-section">
+        <div class="author-label">Authored By</div>
+        <div class="author-name">Dakhin Tudu</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="backdrop" onclick="toggleSidebar()"></div>
+  <div class="app">
+    <header>
+      <div id="progress-bar"></div>
+      <div class="header-left">
+        <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1><span>WEBSOCKET</span> STOMP</h1>
+      </div>
+      <div class="header-actions">
+        <button id="search-toggle" onclick="toggleSearch(true)">🔍</button>
+        <div class="search-wrapper" id="search-bar">
+          <input id="search" placeholder="Search documentation...">
+          <button id="search-close" onclick="toggleSearch(false)">✕</button>
+        </div>
+        <button id="theme" onclick="toggleTheme()">◑</button>
+      </div>
+    </header>
+
+    <nav id="sidebar">
+      <h2>Contents</h2>
+<a href="#intro" onclick="if(window.innerWidth < 1024) toggleSidebar()">Introduction</a>
+<a href="#1-first-understand-the-big-picture" onclick="if(window.innerWidth < 1024) toggleSidebar()">1. First Understand The Big Picture</a>
+<a href="#2-high-level-architecture" onclick="if(window.innerWidth < 1024) toggleSidebar()">2. High Level Architecture</a>
+<a href="#3-why-websocket-exists" onclick="if(window.innerWidth < 1024) toggleSidebar()">3. Why WebSocket Exists</a>
+<a href="#4-detailed-connection-lifecycle" onclick="if(window.innerWidth < 1024) toggleSidebar()">4. Detailed Connection Lifecycle</a>
+<a href="#5-what-is-stomp" onclick="if(window.innerWidth < 1024) toggleSidebar()">5. What Is STOMP?</a>
+<a href="#6-stomp-lifecycle" onclick="if(window.innerWidth < 1024) toggleSidebar()">6. STOMP Lifecycle</a>
+<a href="#7-stomp-frame-structure" onclick="if(window.innerWidth < 1024) toggleSidebar()">7. STOMP Frame Structure</a>
+<a href="#8-most-important-concept" onclick="if(window.innerWidth < 1024) toggleSidebar()">8. Most Important Concept</a>
+<a href="#9-complete-message-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">9. Complete Message Flow</a>
+<a href="#10-spring-internal-architecture" onclick="if(window.innerWidth < 1024) toggleSidebar()">10. Spring Internal Architecture</a>
+<a href="#11-complete-spring-boot-configuration" onclick="if(window.innerWidth < 1024) toggleSidebar()">11. Complete Spring Boot Configuration</a>
+<a href="#12-what-each-configuration-really-means" onclick="if(window.innerWidth < 1024) toggleSidebar()">12. What Each Configuration Really Means</a>
+<a href="#13-frontend-client-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">13. Frontend Client Flow</a>
+<a href="#14-real-chat-application-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">14. Real Chat Application Flow</a>
+<a href="#15-controller-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">15. Controller Flow</a>
+<a href="#16-most-confusing-part-for-beginners" onclick="if(window.innerWidth < 1024) toggleSidebar()">16. Most Confusing Part For Beginners</a>
+<a href="#17-actual-senior-level-mental-model" onclick="if(window.innerWidth < 1024) toggleSidebar()">17. Actual Senior Level Mental Model</a>
+<a href="#18-simple-broker-vs-rabbitmq" onclick="if(window.innerWidth < 1024) toggleSidebar()">18. Simple Broker vs RabbitMQ</a>
+<a href="#19-external-broker-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">19. External Broker Flow</a>
+<a href="#20-thread-flow-inside-spring" onclick="if(window.innerWidth < 1024) toggleSidebar()">20. Thread Flow Inside Spring</a>
+<a href="#21-heartbeats" onclick="if(window.innerWidth < 1024) toggleSidebar()">21. Heartbeats</a>
+<a href="#22-common-destinations" onclick="if(window.innerWidth < 1024) toggleSidebar()">22. Common Destinations</a>
+<a href="#23-user-specific-messaging" onclick="if(window.innerWidth < 1024) toggleSidebar()">23. User Specific Messaging</a>
+<a href="#24-complete-mental-model" onclick="if(window.innerWidth < 1024) toggleSidebar()">24. Complete Mental Model</a>
+<a href="#25-complete-end-to-end-flow" onclick="if(window.innerWidth < 1024) toggleSidebar()">25. Complete End To End Flow</a>
+<a href="#26-when-to-use-websocket" onclick="if(window.innerWidth < 1024) toggleSidebar()">26. When To Use WebSocket</a>
+<a href="#27-what-senior-engineers-actually-understand" onclick="if(window.innerWidth < 1024) toggleSidebar()">27. What Senior Engineers Actually Understand</a>
+<a href="#28-dynamic-messaging-with-simpmessagingtemplate" onclick="if(window.innerWidth < 1024) toggleSidebar()">28. Dynamic Messaging with SimpMessagingTemplate</a>
+<a href="#29-tracking-online-users-websocket-events" onclick="if(window.innerWidth < 1024) toggleSidebar()">29. Tracking Online Users (WebSocket Events)</a>
+<a href="#30-securing-websockets-authentication-interceptors" onclick="if(window.innerWidth < 1024) toggleSidebar()">30. Securing WebSockets (Authentication & Interceptors)</a>
+<a href="#31-error-handling-in-controllers" onclick="if(window.innerWidth < 1024) toggleSidebar()">31. Error Handling in Controllers</a>
+<a href="#32-final-understanding" onclick="if(window.innerWidth < 1024) toggleSidebar()">32. Final Understanding</a>
+      <div class="nav-footer">
+        <button class="download-btn" onclick="downloadPDF()">Export as PDF</button>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <div class="content">
+<section id="intro">
+<h1>WEBSOCKET STOMP</h1>
+<p>
+This document explains BOTH high-level and low-level architecture of:
+</p>
+
+<ul>
+  <li>WebSocket</li>
+  <li>STOMP</li>
+  <li>Spring Boot Messaging</li>
+  <li>Message Brokers</li>
+  <li>Spring Internal Channels</li>
+  <li>Realtime Communication</li>
+  <li>Handshake Flow</li>
+  <li>Thread Flow</li>
+  <li>Broker Routing</li>
+</ul>
+
+<hr/></section>
+<section id="1-first-understand-the-big-picture">
+<h2>1. First Understand The Big Picture</h2>
+
+
+<div class="callout note">
+
+<p>
+Think of the entire system like this:
+</p>
+
+<ul>
+  <li><b>HTTP</b> = Normal request/response</li>
+  <li><b>WebSocket</b> = Permanent TCP communication pipe</li>
+  <li><b>STOMP</b> = Messaging protocol inside that pipe</li>
+  <li><b>Spring Broker</b> = Traffic manager/router</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="2-high-level-architecture">
+<h2>2. High Level Architecture</h2>
+
+
+<div class="mermaid">
+flowchart LR
+
+A[Frontend Browser]
+--> B[WebSocket Connection]
+
+B --> C[STOMP Frames]
+
+C --> D[Spring WebSocket Endpoint]
+
+D --> E[Spring Messaging Infrastructure]
+
+E --> F[MessageMapping Controllers]
+
+F --> G[Business Logic]
+
+G --> H[Message Broker]
+
+H --> I[Subscribed Clients]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="3-why-websocket-exists">
+<h2>3. Why WebSocket Exists</h2>
+
+
+<div class="callout note">
+
+<h3>Traditional HTTP</h3>
+
+<pre>
+Client ---> Request ---> Server
+Client <--- Response <--- Server
+</pre>
+
+<p>
+Connection closes after response.
+</p>
+
+<h3>Problem</h3>
+
+<p>
+Realtime systems need server-to-client push communication:
+</p>
+
+<ul>
+  <li>chat apps</li>
+  <li>stock market</li>
+  <li>multiplayer games</li>
+  <li>notifications</li>
+  <li>live dashboards</li>
+</ul>
+
+<h3>Solution</h3>
+
+<p>
+WebSocket keeps ONE TCP connection permanently open.
+</p>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="4-detailed-connection-lifecycle">
+<h2>4. Detailed Connection Lifecycle</h2>
+
+
+<div class="mermaid">
+sequenceDiagram
+
+participant Browser
+participant SpringBoot
+
+Note over Browser: Step 1 Normal HTTP Request
+
+Browser->>SpringBoot: GET ws endpoint
+Browser->>SpringBoot: Upgrade websocket
+Browser->>SpringBoot: Connection Upgrade Headers
+
+Note over SpringBoot: Spring detects upgrade request
+
+SpringBoot-->>Browser: HTTP 101 Switching Protocols
+
+Note over Browser,SpringBoot: HTTP upgraded to persistent WebSocket TCP connection
+
+Browser->>SpringBoot: STOMP CONNECT Frame
+
+SpringBoot-->>Browser: CONNECTED Frame
+
+Browser->>SpringBoot: SUBSCRIBE Topic Messages
+
+Browser->>SpringBoot: SEND App Chat
+
+SpringBoot-->>Browser: MESSAGE Topic Messages
+</div>
+
+<div class="callout note">
+
+<h3>Step 1 — HTTP Handshake</h3>
+
+<p>
+Browser first sends a normal HTTP request to:
+</p>
+
+<pre>
+/ws
+</pre>
+
+<p>
+This is NOT yet a WebSocket connection.
+</p>
+
+<p>
+Browser is asking:
+</p>
+
+<pre>
+Can we upgrade this HTTP connection into WebSocket?
+</pre>
+
+</div>
+
+<div class="callout note">
+
+<h3>Step 2 — HTTP Upgrade</h3>
+
+<p>
+Browser sends special headers:
+</p>
+
+<pre>
+Upgrade: websocket
+Connection: Upgrade
+</pre>
+
+<p>
+Spring responds:
+</p>
+
+<pre>
+HTTP 101 Switching Protocols
+</pre>
+
+<p>
+Now normal HTTP ends.
+</p>
+
+<p>
+The SAME TCP socket becomes a persistent WebSocket connection.
+</p>
+
+</div>
+
+<div class="callout warning">
+
+<h3>Very Important Understanding</h3>
+
+<p>
+WebSocket physical connection exists ONLY at:
+</p>
+
+<pre>
+/ws
+</pre>
+
+<p>
+NOT at:
+</p>
+
+<pre>
+/app
+/topic
+</pre>
+
+<p>
+Those are STOMP destinations INSIDE the WebSocket connection.
+</p>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="5-what-is-stomp">
+<h2>5. What Is STOMP?</h2>
+
+
+<div class="callout note">
+
+<p>
+WebSocket only provides a communication pipe.
+</p>
+
+<p>
+It DOES NOT define:
+</p>
+
+<ul>
+  <li>subscriptions</li>
+  <li>topics</li>
+  <li>routing</li>
+  <li>broadcasting</li>
+  <li>message semantics</li>
+</ul>
+
+<p>
+STOMP solves this problem.
+</p>
+
+<p>
+STOMP is a messaging protocol running INSIDE WebSocket.
+</p>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="6-stomp-lifecycle">
+<h2>6. STOMP Lifecycle</h2>
+
+
+<div class="callout note">
+
+<p>
+After WebSocket connection is established:
+</p>
+
+<p>
+Client starts sending STOMP frames:
+</p>
+
+<pre>
+CONNECT
+SUBSCRIBE
+SEND
+DISCONNECT
+</pre>
+
+</div>
+
+<div class="mermaid">
+flowchart TB
+
+A[HTTP Request]
+--> B[WebSocket Upgrade]
+
+B --> C[Persistent TCP Socket]
+
+C --> D[STOMP Frames Inside Socket]
+
+D --> E[App Prefix Routes To Controllers]
+
+D --> F[Topic Prefix Routes To Subscribers]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="7-stomp-frame-structure">
+<h2>7. STOMP Frame Structure</h2>
+
+
+<div class="callout note">
+
+<pre>
+SEND
+destination:/app/chat
+content-type:application/json
+
+{
+  "message":"Hello"
+}
+</pre>
+
+<p>
+STOMP frame contains:
+</p>
+
+<ul>
+  <li>Command</li>
+  <li>Headers</li>
+  <li>Body</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="8-most-important-concept">
+<h2>8. Most Important Concept</h2>
+
+
+<div class="callout warning">
+
+<p>
+There are TWO completely different destination types:
+</p>
+
+<ul>
+  <li><code>/app/**</code> = Incoming messages to backend controllers</li>
+  <li><code>/topic/**</code> = Outgoing broadcasts to subscribers</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="9-complete-message-flow">
+<h2>9. Complete Message Flow</h2>
+
+
+<div class="mermaid">
+sequenceDiagram
+
+participant Client
+participant Endpoint
+participant Inbound
+participant Controller
+participant Broker
+participant Outbound
+participant Subscriber
+
+Client->>Endpoint: SEND App Chat
+
+Endpoint->>Inbound: Convert STOMP Frame
+
+Inbound->>Controller: Route to Controller
+
+Controller->>Broker: Publish Topic Message
+
+Broker->>Outbound: Find Subscribers
+
+Outbound->>Subscriber: MESSAGE Frame
+</div>
+
+<hr/>
+
+
+</section>
+<section id="10-spring-internal-architecture">
+<h2>10. Spring Internal Architecture</h2>
+
+
+<div class="mermaid">
+flowchart TB
+
+A[WebSocket Client]
+
+A --> B[WebSocket Endpoint]
+
+B --> C[Client Inbound Channel]
+
+C --> D[Message Mapping Controller]
+
+D --> E[Broker Channel]
+
+E --> F[Simple Broker Or RabbitMQ]
+
+F --> G[Client Outbound Channel]
+
+G --> H[Subscribed Clients]
+</div>
+
+<div class="callout note">
+
+<h3>Important Internal Channels</h3>
+
+<ul>
+<li>
+<b>clientInboundChannel</b><br/>
+Messages coming FROM clients
+</li>
+
+<li>
+<b>brokerChannel</b><br/>
+Messages going TO broker
+</li>
+
+<li>
+<b>clientOutboundChannel</b><br/>
+Messages going BACK to clients
+</li>
+
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="11-complete-spring-boot-configuration">
+<h2>11. Complete Spring Boot Configuration</h2>
+
+
+<pre>
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig
+      implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(
+        StompEndpointRegistry registry) {
+
+        registry
+            .addEndpoint("/ws")
+            .setAllowedOriginPatterns("*")
+            .withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(
+        MessageBrokerRegistry registry) {
+
+        registry.setApplicationDestinationPrefixes("/app");
+
+        registry.enableSimpleBroker(
+            "/topic",
+            "/queue"
+        );
+    }
+}
+</pre>
+
+<hr/>
+
+
+</section>
+<section id="12-what-each-configuration-really-means">
+<h2>12. What Each Configuration Really Means</h2>
+
+
+<div class="callout note">
+
+<h3>EnableWebSocketMessageBroker</h3>
+
+<p>
+Activates Spring STOMP messaging infrastructure.
+</p>
+
+<p>
+Without this:
+</p>
+
+<ul>
+  <li>no broker</li>
+  <li>no STOMP routing</li>
+  <li>no subscriptions</li>
+  <li>no message channels</li>
+</ul>
+
+<h3>addEndpoint ws</h3>
+
+<p>
+Creates HTTP handshake endpoint.
+</p>
+
+<p>
+Browser initially connects here using HTTP.
+</p>
+
+<p>
+After successful upgrade:
+</p>
+
+<pre>
+HTTP -> WebSocket TCP Connection
+</pre>
+
+<p>
+Important:
+</p>
+
+<p>
+This endpoint is the PHYSICAL socket connection endpoint.
+</p>
+
+<h3>withSockJS</h3>
+
+<p>
+Fallback mechanism when browser/network cannot use native WebSocket.
+</p>
+
+<p>
+SockJS may fallback to:
+</p>
+
+<ul>
+  <li>long polling</li>
+  <li>xhr streaming</li>
+  <li>event source</li>
+</ul>
+
+<h3>setApplicationDestinationPrefixes app</h3>
+
+<p>
+Defines incoming routing prefix.
+</p>
+
+<p>
+Anything sent to:
+</p>
+
+<pre>
+/app/**
+</pre>
+
+<p>
+gets routed into Spring controllers.
+</p>
+
+<p>
+Example:
+</p>
+
+<pre>
+SEND /app/chat
+</pre>
+
+<p>
+Spring removes:
+</p>
+
+<pre>
+/app
+</pre>
+
+<p>
+Then maps remaining destination:
+</p>
+
+<pre>
+/chat
+</pre>
+
+<p>
+to:
+</p>
+
+<pre>
+@MessageMapping("/chat")
+</pre>
+
+<h3>enableSimpleBroker topic queue</h3>
+
+<p>
+Creates internal in-memory message broker.
+</p>
+
+<p>
+Broker handles:
+</p>
+
+<ul>
+  <li>subscriptions</li>
+  <li>broadcasting</li>
+  <li>session tracking</li>
+  <li>message fanout</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="13-frontend-client-flow">
+<h2>13. Frontend Client Flow</h2>
+
+
+<div class="mermaid">
+sequenceDiagram
+
+participant React
+participant SockJS
+participant STOMP
+participant Spring
+
+React->>SockJS: Create Socket
+
+SockJS->>Spring: Connect ws endpoint
+
+React->>STOMP: CONNECT Frame
+
+React->>STOMP: SUBSCRIBE Topic Messages
+
+React->>STOMP: SEND App Chat
+
+Spring-->>React: MESSAGE Topic Messages
+</div>
+
+<hr/>
+
+
+</section>
+<section id="14-real-chat-application-flow">
+<h2>14. Real Chat Application Flow</h2>
+
+
+<div class="mermaid">
+flowchart LR
+
+A[User Types Message]
+--> B[Frontend Sends Message]
+
+B --> C[Send To App Chat]
+
+C --> D[Message Mapping Controller]
+
+D --> E[Save To Database]
+
+E --> F[Broker Publishes]
+
+F --> G[Topic Messages]
+
+G --> H[All Subscribers Receive]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="15-controller-flow">
+<h2>15. Controller Flow</h2>
+
+
+<pre>
+@Controller
+public class ChatController {
+
+    @MessageMapping("/chat")
+    @SendTo("/topic/messages")
+    public ChatMessage send(ChatMessage msg) {
+
+        return msg;
+    }
+}
+</pre>
+
+<div class="callout note">
+
+<h3>Actual Runtime Flow</h3>
+
+<ol>
+<li>Client sends message to <code>/app/chat</code></li>
+
+<li>Spring checks application prefix</li>
+
+<li>Spring removes <code>/app</code></li>
+
+<li>Remaining destination becomes <code>/chat</code></li>
+
+<li>Spring searches matching controller mapping</li>
+
+<li>Method executes</li>
+
+<li>Return value goes to broker</li>
+
+<li>Broker broadcasts to subscribers</li>
+
+</ol>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="16-most-confusing-part-for-beginners">
+<h2>16. Most Confusing Part For Beginners</h2>
+
+
+<div class="callout warning">
+
+<p>
+Frontend NEVER sends directly to:
+</p>
+
+<pre>
+/topic/messages
+</pre>
+
+<p>
+Frontend SENDS to:
+</p>
+
+<pre>
+/app/chat
+</pre>
+
+<p>
+Frontend SUBSCRIBES to:
+</p>
+
+<pre>
+/topic/messages
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="17-actual-senior-level-mental-model">
+<h2>17. Actual Senior Level Mental Model</h2>
+
+
+<div class="callout warning">
+
+<p>
+Beginners think:
+</p>
+
+<pre>
+Frontend -> Controller
+</pre>
+
+<p>
+Actual architecture:
+</p>
+
+<pre>
+Frontend
+-> WebSocket
+-> STOMP Frame
+-> Inbound Channel
+-> Messaging Infrastructure
+-> Controller
+-> Broker
+-> Outbound Channel
+-> Subscribers
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="18-simple-broker-vs-rabbitmq">
+<h2>18. Simple Broker vs RabbitMQ</h2>
+
+
+<div class="mermaid">
+flowchart TB
+
+subgraph SimpleBroker
+A[Spring In Memory Broker]
+end
+
+subgraph ExternalBroker
+B[RabbitMQ]
+C[ActiveMQ]
+end
+</div>
+
+<div class="callout note">
+
+<h3>Simple Broker</h3>
+
+<ul>
+<li>In-memory</li>
+<li>Single server</li>
+<li>Easy setup</li>
+<li>Good for small systems</li>
+</ul>
+
+<h3>External Broker</h3>
+
+<ul>
+<li>Distributed</li>
+<li>Scalable</li>
+<li>Persistent</li>
+<li>Production ready</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="19-external-broker-flow">
+<h2>19. External Broker Flow</h2>
+
+
+<div class="mermaid">
+flowchart LR
+
+A[Client]
+--> B[Spring Boot]
+
+B --> C[Broker Relay]
+
+C --> D[RabbitMQ STOMP]
+
+D --> E[Other Services]
+
+D --> F[Subscribers]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="20-thread-flow-inside-spring">
+<h2>20. Thread Flow Inside Spring</h2>
+
+
+<div class="mermaid">
+flowchart TB
+
+A[Socket Thread]
+--> B[Decode STOMP]
+
+B --> C[Inbound Thread Pool]
+
+C --> D[Controller Thread]
+
+D --> E[Broker Channel]
+
+E --> F[Broker Thread]
+
+F --> G[Outbound Channel]
+
+G --> H[Socket Write Thread]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="21-heartbeats">
+<h2>21. Heartbeats</h2>
+
+
+<div class="callout note">
+
+<p>
+STOMP supports heartbeats.
+</p>
+
+<p>
+Purpose:
+</p>
+
+<ul>
+<li>Detect dead clients</li>
+<li>Keep connection alive</li>
+<li>Avoid silent disconnects</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="22-common-destinations">
+<h2>22. Common Destinations</h2>
+
+
+<div class="callout note">
+
+<table>
+
+<tr>
+<th>Destination</th>
+<th>Purpose</th>
+</tr>
+
+<tr>
+<td>/app/chat</td>
+<td>Incoming message to backend</td>
+</tr>
+
+<tr>
+<td>/topic/messages</td>
+<td>Broadcast to all subscribers</td>
+</tr>
+
+<tr>
+<td>/queue/private</td>
+<td>Private queue</td>
+</tr>
+
+<tr>
+<td>/user/queue/msg</td>
+<td>User specific messages</td>
+</tr>
+
+</table>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="23-user-specific-messaging">
+<h2>23. User Specific Messaging</h2>
+
+
+<div class="mermaid">
+sequenceDiagram
+
+participant Server
+participant UserA
+participant UserB
+
+Server->>UserA: User Queue Message
+
+Note over UserB: Does not receive
+</div>
+
+<hr/>
+
+
+</section>
+<section id="24-complete-mental-model">
+<h2>24. Complete Mental Model</h2>
+
+
+<div class="callout note">
+
+<pre>
+ws
+= Physical WebSocket Endpoint
+
+WebSocket
+= Transport Layer
+
+STOMP
+= Messaging Protocol
+
+app
+= Incoming Routing Prefix
+
+topic
+= Outgoing Broadcast Prefix
+
+MessageMapping
+= WebSocket Controller
+
+Spring Broker
+= Message Router
+
+SimpMessagingTemplate
+= Manual Message Publisher
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="25-complete-end-to-end-flow">
+<h2>25. Complete End To End Flow</h2>
+
+
+<div class="mermaid">
+flowchart TB
+
+A[Frontend Connects]
+--> B[HTTP Upgrade]
+
+B --> C[WebSocket Open]
+
+C --> D[STOMP Connect]
+
+D --> E[Subscribe Topic Messages]
+
+E --> F[Send App Chat]
+
+F --> G[Message Mapping Controller]
+
+G --> H[Business Logic]
+
+H --> I[Broker Processes]
+
+I --> J[Topic Messages]
+
+J --> K[Subscribers Receive]
+</div>
+
+<hr/>
+
+
+</section>
+<section id="26-when-to-use-websocket">
+<h2>26. When To Use WebSocket</h2>
+
+
+<div class="callout note">
+
+<h3>Use WebSocket For</h3>
+
+<ul>
+<li>chat systems</li>
+<li>live notifications</li>
+<li>stock market</li>
+<li>gaming</li>
+<li>tracking systems</li>
+<li>realtime dashboards</li>
+<li>collaborative editing</li>
+</ul>
+
+<h3>Do Not Use WebSocket For</h3>
+
+<ul>
+<li>simple CRUD APIs</li>
+<li>rare updates</li>
+<li>normal forms</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="27-what-senior-engineers-actually-understand">
+<h2>27. What Senior Engineers Actually Understand</h2>
+
+
+<div class="callout warning">
+
+<p>
+Most tutorials only teach:
+</p>
+
+<pre>
+SEND -> RECEIVE
+</pre>
+
+<p>
+Real systems require understanding:
+</p>
+
+<ul>
+<li>transport layer</li>
+<li>broker routing</li>
+<li>thread pools</li>
+<li>channels</li>
+<li>subscriptions</li>
+<li>session management</li>
+<li>message conversion</li>
+<li>scaling</li>
+<li>broker relay</li>
+<li>distributed messaging</li>
+</ul>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="28-dynamic-messaging-with-simpmessagingtemplate">
+<h2>28. Dynamic Messaging with SimpMessagingTemplate</h2>
+
+
+<div class="callout note">
+
+<p>
+Sometimes you need to send a message NOT as a response to a client's message, but from a background job, an external API call, or a scheduled task.
+</p>
+
+<pre>
+@Service
+public class NotificationService {
+
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public NotificationService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    public void sendGlobalAlert(String message) {
+        // Send to a topic (Broadcast to all)
+        messagingTemplate.convertAndSend("/topic/alerts", message);
+    }
+
+    public void sendPrivateNotification(String username, String message) {
+        // Send to a specific user
+        messagingTemplate.convertAndSendToUser(
+            username, 
+            "/queue/notifications", 
+            message
+        );
+    }
+}
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="29-tracking-online-users-websocket-events">
+<h2>29. Tracking Online Users (WebSocket Events)</h2>
+
+
+<div class="callout note">
+
+<p>
+Spring broadcasts Application Events for WebSocket lifecycles. You can listen to these to track who is online.
+</p>
+
+<pre>
+@Component
+public class WebSocketEventListener {
+
+    @EventListener
+    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
+        System.out.println("Received a new web socket connection");
+    }
+
+    @EventListener
+    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        String username = (String) headerAccessor.getSessionAttributes().get("username");
+        
+        if(username != null) {
+            System.out.println("User Disconnected : " + username);
+            // Broadcast user leave event
+        }
+    }
+}
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="30-securing-websockets-authentication-interceptors">
+<h2>30. Securing WebSockets (Authentication & Interceptors)</h2>
+
+
+<div class="callout note">
+
+<p>
+Since WebSockets begin as an HTTP upgrade, you can authenticate during the HTTP handshake using standard session cookies. However, if you use stateless <b>JWT tokens</b>, it's common to pass the token in the STOMP CONNECT frame.
+</p>
+
+<p>
+You intercept STOMP frames using a <code>ChannelInterceptor</code> before they reach the controllers:
+</p>
+
+<pre>
+@Configuration
+public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message&lt;?&gt; preSend(Message&lt;?&gt; message, MessageChannel channel) {
+                StompHeaderAccessor accessor = 
+                    MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    String token = accessor.getFirstNativeHeader("Authorization");
+                    // Validate JWT token here
+                    // If valid, set the Principal for the session
+                }
+                return message;
+            }
+        });
+    }
+}
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="31-error-handling-in-controllers">
+<h2>31. Error Handling in Controllers</h2>
+
+
+<div class="callout note">
+
+<p>
+Just like <code>@ExceptionHandler</code> in REST controllers, WebSocket controllers use <code>@MessageExceptionHandler</code>.
+</p>
+
+<pre>
+@Controller
+public class ChatController {
+
+    @MessageMapping("/chat")
+    public void processMessage(ChatMessage message) {
+        if (message.getContent().contains("spam")) {
+            throw new IllegalArgumentException("Spam not allowed!");
+        }
+        // process...
+    }
+
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors")
+    public String handleException(IllegalArgumentException exception) {
+        return exception.getMessage();
+    }
+}
+</pre>
+
+</div>
+
+<hr/>
+
+
+</section>
+<section id="32-final-understanding">
+<h2>32. Final Understanding</h2>
+
+
+<div class="callout note">
+
+<p>
+If you truly understand:
+</p>
+
+<ul>
+<li>HTTP Upgrade & WebSocket Lifecycle</li>
+<li>STOMP Frames & Application Prefixes</li>
+<li>Broker Routing (Simple vs External)</li>
+<li>Inbound / Outbound Channels & Interceptors</li>
+<li>Subscriptions & Session Management</li>
+<li>Message Mapping & Error Handling</li>
+</ul>
+
+<p>
+Then you can build production-ready:
+</p>
+
+<ul>
+<li>chat systems & notification engines</li>
+<li>trading platforms & multiplayer games</li>
+<li>live dashboards & realtime collaboration systems</li>
+</ul>
+
+<p>
+WITHOUT blindly following tutorials.
+</p>
+
+</div>
+
+
+</section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const toggleTheme = () => {
+      const html = document.documentElement;
+      const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+    };
+
+    const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
+
+    const mainContent = document.getElementById('main-content');
+    const progressBar = document.getElementById('progress-bar');
+    
+    mainContent.onscroll = () => {
+      const winScroll = mainContent.scrollTop;
+      const height = mainContent.scrollHeight - mainContent.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      progressBar.style.width = scrolled + "%";
+    };
+
+    const searchBar = document.getElementById('search-bar');
+    const searchInput = document.getElementById('search');
+    
+    const toggleSearch = (show) => {
+      searchBar.classList.toggle('active', show);
+      if (show) searchInput.focus();
+    };
+
+    searchInput.oninput = () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll('section').forEach(s => {
+        s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+      });
+    };
+
+    const downloadPDF = () => {
+      document.querySelectorAll('details').forEach(d => d.open = true);
+      window.print();
+    };
+  </script>
+</body>
+</html>

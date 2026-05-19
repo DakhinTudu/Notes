@@ -16,6 +16,7 @@ A high-performance, mobile-first collection of technical deep-dives for backend 
 - [**Core Java Mastery**](core-java-notes.html) — Foundations, OOP, Collections, and Exception handling.
 - [**JUnit & Mockito**](junit-mockito-testing.html) — Advanced unit testing and mocking strategies.
 - [**Apache Kafka**](kafka.html) — Event-driven architecture and distributed messaging.
+- [**Spring Boot WebSocket**](websocket.html) — Real-time bidirectional communication and STOMP architecture.
 - [**Docker Mastery**](docker.html) — Professional containerization and microservices orchestration.
 
 ## 🛠️ Project Structure
