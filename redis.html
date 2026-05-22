@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redis Deep Dive - From Zero to Hero</title>
+  
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    // Mobile table wrapping script
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll('table').forEach(table => {
+        const wrapper = document.createElement('div');
+        wrapper.style.overflowX = 'auto';
+        wrapper.style.margin = '20px 0';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+        table.style.margin = '0';
+      });
+    });
+  </script>
+
+  <style>
+    /* --- Mobile First Strategy --- */
+    :root {
+      --bg-color: #ffffff;
+      --bg-secondary: #fbfcfe;
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --accent-color: #ef4444; /* Redis Red */
+      --accent-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --note-bg: #fef2f2;
+      --note-border: #f87171;
+      --warning-bg: #fffaf5;
+      --warning-border: #fb923c;
+      --font-family: 'Inter', sans-serif;
+      --mono-font: 'JetBrains Mono', monospace;
+      --header-height: 64px;
+      --sidebar-width: 280px;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --bg-secondary: #1e293b;
+      --glass-bg: rgba(15, 23, 42, 0.9);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --accent-color: #f87171;
+      --accent-gradient: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --note-bg: #2e1010;
+      --note-border: #ef4444;
+      --warning-bg: #2a2010;
+      --warning-border: #fb923c;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0; font-family: var(--font-family);
+      background: var(--bg-color); color: var(--text-primary);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+    header {
+      position: sticky; top: 0; height: var(--header-height);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 16px; border-bottom: 1px solid var(--border-color);
+      background: var(--glass-bg); backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px); z-index: 1000;
+    }
+
+    #progress-bar {
+      position: absolute; bottom: -1px; left: 0; height: 2px;
+      background: var(--accent-gradient); width: 0%; transition: width 0.1s ease;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    #menu-toggle {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      font-size: 1.2rem; color: var(--text-primary); cursor: pointer;
+      width: 40px; height: 40px; border-radius: 10px;
+    }
+
+    header h1 {
+      font-size: 0.85rem; margin: 0; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+    }
+
+    header h1 span { background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+
+    header input {
+      width: 100%; padding: 10px 12px 10px 40px; border: 1px solid var(--border-color);
+      border-radius: 12px; background: var(--bg-secondary); color: var(--text-primary);
+      font-size: 0.9rem; outline: none; transition: all 0.3s ease;
+    }
+
+    .search-wrapper {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color); z-index: 10; display: none;
+      align-items: center; padding: 0 16px;
+    }
+
+    .search-wrapper.active { display: flex; }
+
+    #search-close { background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); padding: 8px; cursor: pointer; }
+
+    #search-toggle {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .search-wrapper { position: relative; display: flex; background: transparent; padding: 0; width: 280px; }
+      #search-toggle, #search-close { display: none !important; }
+      header input { width: 280px; }
+      header input:focus { width: 320px; border-color: var(--accent-color); }
+    }
+
+    #theme {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    nav {
+      position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width);
+      background: var(--bg-color); z-index: 1100; padding: 24px 16px;
+      transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-color);
+    }
+
+    .sidebar-open nav { transform: translateX(0); }
+
+    #backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px); z-index: 1050; display: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+
+    .sidebar-open #backdrop { display: block; opacity: 1; }
+
+    nav h2 { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); margin: 24px 0 8px 12px; font-weight: 800; letter-spacing: 1px; }
+
+    nav a { padding: 12px 16px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 12px; transition: all 0.2s ease; }
+
+    nav a:hover, nav a.active { color: var(--accent-color); background: var(--bg-secondary); }
+
+    .nav-footer { margin-top: auto; padding-top: 20px; }
+
+    .download-btn {
+      width: 100%; padding: 10px 16px; background: var(--accent-gradient);
+      color: white; border: none; border-radius: 10px; font-weight: 600;
+      font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; transition: all 0.2s ease;
+    }
+
+    main { flex: 1; overflow-y: auto; padding: 32px 20px; scroll-behavior: smooth; }
+
+    h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    h2::before { content: ''; width: 4px; height: 20px; background: var(--accent-gradient); border-radius: 2px; }
+    h3 { margin-top: 30px; font-weight: 700; }
+
+    .callout { padding: 20px; border-radius: 16px; margin: 24px 0; border: 1px solid; display: flex; flex-direction: column; gap: 8px; }
+    .note { background: var(--note-bg); border-color: var(--note-border); }
+    .warning { background: var(--warning-bg); border-color: var(--warning-border); }
+
+    pre { padding: 20px; border-radius: 16px; background: var(--code-bg); color: var(--code-text); overflow-x: auto; margin: 24px 0; border: 1px solid var(--border-color); font-family: var(--mono-font); font-size: 0.9rem;}
+
+    table{
+      border-collapse: collapse;
+      width:100%;
+      min-width: 500px; /* Allows horizontal scroll on mobile */
+    }
+    table td, table th{
+      border:1px solid var(--border-color);
+      padding:12px;
+      text-align: left;
+    }
+    table th{
+      background: var(--bg-secondary);
+      font-weight: 600;
+    }
+    
+    .mermaid {
+      margin: 30px 0;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .app { display: grid; grid-template-areas: "header header" "sidebar main"; grid-template-columns: var(--sidebar-width) 1fr; grid-template-rows: var(--header-height) 1fr; }
+      nav { grid-area: sidebar; position: static; transform: none; padding: 40px 24px; background: var(--bg-secondary); }
+      #menu-toggle, #backdrop { display: none !important; }
+      main { grid-area: main; padding: 60px 40px; }
+    }
+
+    .hidden { display: none !important; }
+
+    /* --- Architectural PDF Export Styles --- */
+    .print-only { display: none !important; }
+    .print-footer { display: none !important; }
+
+    @page { size: A4; margin: 0; }
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body { margin: 10mm; }
+      .pdf-cover { margin: -10mm !important; }
+      pre { 
+        background: #f8fafc !important; 
+        color: #0f172a !important; 
+        border: 1px solid #cbd5e1 !important; 
+        box-shadow: none !important;
+      }
+      pre code, :not(pre) > code { color: #0f172a !important; background: #f1f5f9 !important; }
+      .callout { background: white !important; color: black !important; border: 1px solid #cbd5e1 !important; }
+      .callout.note { border-left: 4px solid #ef4444 !important; }
+      .callout.warning { border-left: 4px solid #fb923c !important; }
+
+      .print-only { display: block !important; }
+      .print-footer { 
+        display: block !important; position: fixed; bottom: 5mm; right: 10mm; 
+        font-size: 8pt; color: #94a3b8; font-weight: 600;
+      }
+      header, nav, #backdrop, .download-btn, #theme, #search-toggle { display: none !important; }
+      
+      body, .app, main { 
+        display: block !important; height: auto !important; 
+        overflow: visible !important; background: white !important; color: black !important;
+      }
+      
+      main { padding: 0 !important; margin: 0 !important; }
+
+      .pdf-cover {
+        display: flex !important; flex-direction: row;
+        width: 210mm; height: 297mm; text-align: left; page-break-after: always;
+        background: white; margin: 0 !important; padding: 0 !important;
+        box-sizing: border-box; overflow: hidden;
+      }
+
+      .pdf-cover .sidebar {
+        width: 60mm; background: #b91c1c; display: flex;
+        flex-direction: column; justify-content: flex-end;
+        padding: 40px; color: white;
+      }
+
+      .pdf-cover .main-area {
+        flex: 1; padding: 80px 50px; display: flex;
+        flex-direction: column; justify-content: center;
+      }
+
+      .pdf-cover .logo-vertical {
+        font-size: 24pt; font-weight: 900; letter-spacing: 6px;
+        writing-mode: vertical-rl; transform: rotate(180deg);
+        opacity: 0.9; margin-bottom: 20px;
+      }
+
+      .pdf-cover .badge {
+        background: #fef2f2; color: #b91c1c; padding: 8px 16px;
+        border-radius: 99px; font-size: 11pt; font-weight: 800;
+        width: fit-content; margin-bottom: 24px; text-transform: uppercase;
+      }
+
+      .pdf-cover h1 {
+        font-size: 56pt !important; font-weight: 900; line-height: 1.1;
+        color: #0f172a !important; margin: 0 0 20px 0 !important;
+        border: none !important; letter-spacing: -2px;
+      }
+
+      .pdf-cover .subtitle { font-size: 18pt; color: #475569; line-height: 1.4; margin-bottom: 60px; max-width: 450px; }
+      .pdf-cover .author-section { margin-top: auto; }
+      .pdf-cover .author-label { font-size: 10pt; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 700; }
+      .pdf-cover .author-name { font-size: 20pt; font-weight: 800; color: #0f172a; }
+
+      section { page-break-inside: auto; margin-bottom: 30pt; display: block !important; }
+      h1, h2, h3 { page-break-after: avoid; }
+      pre, .callout, table { page-break-inside: avoid; }
+    }
+  
+    nav {
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+    nav::-webkit-scrollbar {
+        display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="print-footer">daxin.dev notes</div>
+
+  <div class="print-only pdf-cover">
+    <div class="sidebar">
+      <div class="logo-vertical">DAXIN.DEV</div>
+    </div>
+    <div class="main-area">
+      <div class="badge">Mastery Series • 2026</div>
+      <h1>REDIS<br>DEEP DIVE</h1>
+      <p class="subtitle">Complete guide from Zero-Knowledge mental models to Senior System Architectures within Spring Boot.</p>
+      <div class="author-section">
+        <div class="author-label">Authored By</div>
+        <div class="author-name">Dakhin Tudu</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="backdrop" onclick="toggleSidebar()"></div>
+  <div class="app">
+    <header>
+      <div id="progress-bar"></div>
+      <div class="header-left">
+        <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1><span>REDIS</span> DEEP DIVE</h1>
+      </div>
+      <div class="header-actions">
+        <button id="search-toggle" onclick="toggleSearch(true)">🔍</button>
+        <div class="search-wrapper" id="search-bar">
+          <input id="search" placeholder="Search documentation...">
+          <button id="search-close" onclick="toggleSearch(false)">✕</button>
+        </div>
+        <button id="theme" onclick="toggleTheme()">◑</button>
+      </div>
+    </header>
+
+    <nav id="sidebar">
+      <h2>Contents</h2>
+      <a href="#1-intro-section" onclick="if(window.innerWidth < 1024) toggleSidebar()">1. Intro: Why are we here?</a>
+      <a href="#2-the-problem" onclick="if(window.innerWidth < 1024) toggleSidebar()">2. Creating the Need (Analogy)</a>
+      <a href="#3-what-is-redis" onclick="if(window.innerWidth < 1024) toggleSidebar()">3. What Actually is Redis?</a>
+      <a href="#4-internal-architecture" onclick="if(window.innerWidth < 1024) toggleSidebar()">4. Internal Architecture</a>
+      <a href="#5-data-structures" onclick="if(window.innerWidth < 1024) toggleSidebar()">5. Redis Data Structures</a>
+      <a href="#6-caching-pattern" onclick="if(window.innerWidth < 1024) toggleSidebar()">6. The Cache-Aside Pattern</a>
+      <a href="#7-eviction-policies" onclick="if(window.innerWidth < 1024) toggleSidebar()">7. Memory Management & Eviction</a>
+      <a href="#8-cache-stampede" onclick="if(window.innerWidth < 1024) toggleSidebar()">8. The Cache Stampede Problem</a>
+      <a href="#9-persistence" onclick="if(window.innerWidth < 1024) toggleSidebar()">9. Persistence (RDB vs AOF)</a>
+      <a href="#10-pub-sub" onclick="if(window.innerWidth < 1024) toggleSidebar()">10. Pub/Sub & WebSockets</a>
+      <a href="#11-redis-streams" onclick="if(window.innerWidth < 1024) toggleSidebar()">11. Redis Streams</a>
+      <a href="#12-distributed-locking" onclick="if(window.innerWidth < 1024) toggleSidebar()">12. Distributed Locking</a>
+      <a href="#13-pipelining" onclick="if(window.innerWidth < 1024) toggleSidebar()">13. Network Pipelining</a>
+      <a href="#14-high-availability" onclick="if(window.innerWidth < 1024) toggleSidebar()">14. High Availability & Cluster</a>
+      <a href="#15-spring-boot-integration" onclick="if(window.innerWidth < 1024) toggleSidebar()">15. Spring Boot Deep Dive</a>
+      <a href="#16-real-world" onclick="if(window.innerWidth < 1024) toggleSidebar()">16. Real-World Use Cases</a>
+      <a href="#17-comparison" onclick="if(window.innerWidth < 1024) toggleSidebar()">17. Redis vs Kafka vs RabbitMQ</a>
+      <a href="#18-interview-questions" onclick="if(window.innerWidth < 1024) toggleSidebar()">18. Senior Interview Questions</a>
+      
+      <div class="nav-footer">
+        <button class="download-btn" onclick="downloadPDF()">Export as PDF</button>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <div class="content">
+
+<section id="1-intro-section">
+<h1>Redis Deep Dive: From Zero to Architect</h1>
+
+<p>
+I used to think Redis was just a simple cache... 🤔
+</p>
+
+<p>
+But as I dug into modern backend systems, I started seeing Redis <i>everywhere</i>. It wasn't just speeding up databases; it was orchestrating entirely different architectures:
+</p>
+
+<ul>
+  <li>Coordinating scaling for WebSocket chat servers</li>
+  <li>Building real-time gaming leaderboards</li>
+  <li>Preventing duplicate money deductions in payment systems</li>
+  <li>Managing Rate Limits and OTPs</li>
+</ul>
+
+<div class="callout note">
+<p>Then the real question came:</p>
+<h3>What exactly is Redis doing internally that makes it so indispensable to backend engineering?</h3>
+<p>This note takes you from absolute beginner zero to senior architectural understanding.</p>
+</div>
+
+<hr/>
+</section>
+
+<section id="2-the-problem">
+<h2>2. Creating the Need: The Library Analogy (For Beginners)</h2>
+
+<p>
+Before we talk about technical jargon, let's understand why Redis was invented.
+</p>
+
+<div class="callout warning">
+<h3>The Librarian's Nightmare</h3>
+<p>
+Imagine you are a librarian holding the knowledge of the entire world.
+</p>
+<p>
+A student walks in and asks: <i>"What is the population of New York?"</i>
+</p>
+<p>
+To find the answer, you must leave your desk, walk down three flights of stairs to the dark basement (<b>Your Hard Disk</b>), search through heavy encyclopedia books (<b>Executing an SQL Join</b>), find the answer, walk back up, and tell the student.
+</p>
+<p>
+This takes <b>5 minutes</b>. (High Latency).
+</p>
+<p>
+Now, imagine 100 students walk in within the next hour, and <b>every single one</b> asks: <i>"What is the population of New York?"</i>
+</p>
+<p>
+If you walk down to the basement 100 times to read the exact same book, you'll collapse from exhaustion! (<b>Database Crash</b>).
+</p>
+</div>
+
+<h3>The Redis Solution</h3>
+<p>
+Instead, you write "Population of NY = 8.4 Million" on a sticky note and stick it directly on your wooden desk.
+</p>
+<p>
+When the next 99 students ask the question, you don't move an inch. You just read the sticky note. This takes <b>1 second</b>.
+</p>
+
+<ul>
+  <li><b>The Basement</b> = SQL Database (Postgres/MySQL) - Stores everything, very safe, but very slow. Data lives on a Hard Drive/SSD.</li>
+  <li><b>The Sticky Note on your Desk</b> = <b>Redis</b>. It stores a limited amount of data, but accessing it is instantly fast because it lives right in front of you. Data lives in <b>RAM</b>.</li>
+</ul>
+
+<hr/>
+</section>
+
+<section id="3-what-is-redis">
+<h2>3. What Actually is Redis?</h2>
+
+<p>
+<b>RE</b>mote <b>DI</b>ctionary <b>S</b>erver.
+</p>
+
+<p>
+Whenever a backend application needs to temporarily store, instantly retrieve, or rapidly calculate data without touching a slow hard drive, it talks to Redis. Redis keeps everything in <b>RAM (Random Access Memory)</b>.
+</p>
+
+<div class="mermaid">
+flowchart TB
+    A[Backend Application]
+    
+    subgraph Computer Hardware Response Times
+    B[RAM Memory - Nano/Microseconds]:::fast
+    C[SSD/HDD Disk - Milliseconds]:::slow
+    end
+
+    A -->|"Fetch Sticky Note (Fast)"| B
+    A -->|"Fetch from Basement (Slow)"| C
+
+    classDef fast fill:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    classDef slow fill:#fee2e2,stroke:#ef4444,stroke-width:2px;
+</div>
+
+<hr/>
+</section>
+
+<section id="4-internal-architecture">
+<h2>4. What Actually Happens Internally? (Senior Transition)</h2>
+
+<p>
+If Redis is just RAM, why is it considered engineering perfection?
+</p>
+
+<div class="callout note">
+<h3>The Architecture Engine</h3>
+<ul>
+  <li><b>Single-threaded event loop:</b> Redis executes all commands using a <i>single</i> CPU thread. Why? Because CPU is almost never the bottleneck in a RAM database—network and memory speed are. By being single-threaded, Redis has <b>Zero Locking Overhead</b> and <b>Zero Race Conditions</b>. Everything happens purely sequentially.</li>
+  <li><b>In-memory storage:</b> All keys map directly to C-struct pointers in RAM. No translating rows to objects.</li>
+  <li><b>Non-blocking I/O (epoll/kqueue):</b> Even though it has 1 thread, it can handle 50,000+ connected sockets simultaneously without freezing. It just multiplexes network events.</li>
+</ul>
+</div>
+
+<hr/>
+</section>
+
+<section id="5-data-structures">
+<h2>5. Redis Data Structures</h2>
+
+<p>
+Redis isn't just "keys and strings". It is a <b>Data Structures Server</b>. Sending commands to Redis is exactly like operating on data structures natively in Java or Python.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Structure</th>
+      <th>Equivalent in Java</th>
+      <th>Real-world Use Case</th>
+      <th>Example Command</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>String</b></td>
+      <td><code>String</code>, <code>Integer</code></td>
+      <td>Caching JSON, session IDs, tracking view counts</td>
+      <td><code>SET session:xyz "user_1"</code><br/><code>INCR product:10:likes</code></td>
+    </tr>
+    <tr>
+      <td><b>Hash</b></td>
+      <td><code>HashMap&lt;K,V&gt;</code></td>
+      <td>Storing user profiles intelligently without rewriting entire JSON blocks.</td>
+      <td><code>HSET user:1 name "daxin" age "25"</code></td>
+    </tr>
+    <tr>
+      <td><b>List</b></td>
+      <td><code>LinkedList</code></td>
+      <td>Recent activity streams, Twitter feeds, background Job queueing.</td>
+      <td><code>LPUSH feed:user "new_post_id"</code></td>
+    </tr>
+    <tr>
+      <td><b>Set</b></td>
+      <td><code>HashSet</code></td>
+      <td>Unique items, tracking completely unique IP visitors, finding common friends.</td>
+      <td><code>SADD online_users "user_1"</code></td>
+    </tr>
+    <tr>
+      <td><b>Sorted Set (ZSet)</b></td>
+      <td><code>TreeSet</code> w/ Scores</td>
+      <td>Real-time Gaming Leaderboards, Ranked queues. <i>(Sorts as you insert in O(log N))</i></td>
+      <td><code>ZADD leaderboard 5000 "daxin"</code></td>
+    </tr>
+    <tr>
+      <td><b>Bitmap</b></td>
+      <td><code>BitSet</code></td>
+      <td>Daily Active Users tracking. Using 1 bit per user (extreme memory saving).</td>
+      <td><code>SETBIT active:today 1054 1</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+Imagine building a gaming leaderboard in PostgreSQL. You have to <code>SELECT * FROM scores ORDER BY score DESC LIMIT 10</code>. This is slow and scans tables.
+</p>
+<p>
+In Redis:
+</p>
+<pre>
+> ZADD global_ranks 9500 "PlayerA"
+> ZADD global_ranks 10200 "PlayerB"
+> ZREVRANGE global_ranks 0 9 WITHSCORES  # Returns Top 10 instantly!
+</pre>
+
+<hr/>
+</section>
+
+<section id="6-caching-pattern">
+<h2>6. Redis as Cache & The Cache-Aside Pattern</h2>
+
+<p>This is the bread-and-butter workflow of 90% of backends.</p>
+
+<div class="mermaid">
+sequenceDiagram
+    participant User
+    participant Spring
+    participant Redis
+    participant SQL_DB
+
+    User->>Spring: Get User Profile (ID: 5)
+    
+    Spring->>Redis: GET profile:5
+    
+    alt Cache Hit (Data Exists)
+        Redis-->>Spring: Return {json}
+        Spring-->>User: Respond instantly! (10ms)
+    else Cache Miss (Data Empty)
+        Redis-->>Spring: Null
+        Spring->>SQL_DB: SELECT * FROM users WHERE id = 5
+        SQL_DB-->>Spring: Return Data (200ms)
+        Spring->>Redis: SET profile:5 {json} EX 3600
+        Spring-->>User: Respond (210ms)
+    end
+</div>
+
+<div class="callout note">
+<h3>Vocabulary</h3>
+<ul>
+  <li><b>Cache Hit:</b> Found on the sticky note! Faster response.</li>
+  <li><b>Cache Miss:</b> Not found on the sticky note. Had to go to the basement.</li>
+  <li><b>TTL (Time To Live):</b> Data expires and deletes itself automatically after X seconds. (e.g. <code>EX</code> parameter). Keeps data fresh!</li>
+</ul>
+</div>
+
+<hr/>
+</section>
+
+<section id="7-eviction-policies">
+<h2>7. Memory Management & Eviction Policies</h2>
+
+<p>
+Wait! RAM is expensive. A server might have 1TB of Hard Drive space, but only 16GB of RAM.
+<b>What happens when Redis runs out of memory?</b>
+</p>
+
+<p>
+Redis implements <b>Eviction Policies</b> configured via <i>maxmemory-policy</i>. When RAM fills up, it throws away old data.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Policy</th>
+      <th>What it does when RAM is 100% full</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>allkeys-lru</b> <i>(Most Common)</i></td>
+      <td>Deletes the <b>Least Recently Used</b> keys (stuff no one has asked for recently). Works on EVERYTHING.</td>
+    </tr>
+    <tr>
+      <td><b>volatile-lru</b></td>
+      <td>Deletes the Least Recently Used keys, but ONLY those that have an expiration TTL set. Safe for mixing permanent and temporary data.</td>
+    </tr>
+    <tr>
+      <td><b>allkeys-lfu</b></td>
+      <td>Deletes the <b>Least Frequently Used</b> keys. Great if some keys are accessed every second, but others are accessed rarely over time.</td>
+    </tr>
+    <tr>
+      <td><b>noeviction</b></td>
+      <td>Throws an OutOfMemory Error immediately on new writes. Never deletes anything.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr/>
+</section>
+
+<section id="8-cache-stampede">
+<h2>8. The Cache Stampede Problem (Senior Level)</h2>
+
+<div class="callout warning">
+<h3>The Dogpile Effect</h3>
+<p>
+Imagine a viral tweet on Twitter. Millions of people are viewing it. It is cached in Redis with a 5-minute TTL.
+</p>
+<p>
+Exactly 5 minutes later, the Cache expires. It disappears from Redis.
+</p>
+<p>
+At that exact millisecond, <b>10,000 users</b> refresh their page.
+</p>
+<p>
+Because it's gone from Redis (Cache Miss), <b>all 10,000 threads</b> hit your SQL Database simultaneously to fetch the Tweet. The SQL Database spikes to 100% CPU and completely crashes. This is a <i>Cache Stampede</i>.
+</p>
+</div>
+
+<h3>The Fix: Mutex Locks</h3>
+<p>
+When the cache misses, we don't let all 10,000 threads go to the database. We use a Redis Lock so only <b>one</b> thread goes to the basement. The other 9,999 threads wait 50ms and try the Cache again!
+</p>
+
+<div class="mermaid">
+flowchart TD
+    A[10,000 Requests Miss Cache] --> B[Try to acquire Redis Mutex Lock]
+    B -- Thread 1 gets lock --> C[Goes to SQL DB]
+    C --> D[Writes to Redis]
+    D --> E[Releases Lock]
+    
+    B -- 9,999 Threads fail lock --> F[Sleep 50ms]
+    F --> G[Retry GET from Redis]
+    G -->|Cache Hit!| H[Return Data without touching DB!]
+</div>
+
+<hr/>
+</section>
+
+<section id="9-persistence">
+<h2>9. Redis Persistence</h2>
+
+<p><b>"If it's in RAM, don't we lose all our data if the power goes out?"</b></p>
+<p>Yes. That's why Redis saves data to the hard disk in the background!</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Persistence Strategy</th>
+      <th>How it Works</th>
+      <th>Pros & Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>RDB (Redis Database Snapshot)</b></td>
+      <td>Takes a binary 'picture' of the RAM and saves it to a `.rdb` file on disk every X minutes.</td>
+      <td><b>Pros:</b> Fast to restart, compact file size.<br><b>Cons:</b> If power is lost, you lose all data since the last snapshot (up to minutes of data loss).</td>
+    </tr>
+    <tr>
+      <td><b>AOF (Append Only File)</b></td>
+      <td>Logs every single write operation (e.g. `SET user 1`) sequentially to a text file. Like a transaction log.</td>
+      <td><b>Pros:</b> Extremely safe (can configure to lose almost zero data).<br><b>Cons:</b> File size gets huge, restarting Redis is slower because it has to replay the entire log.</td>
+    </tr>
+  </tbody>
+</table>
+<p><i>Production setups usually use BOTH simultaneously. RDB for fast restarts, AOF for safety.</i></p>
+
+<hr/>
+</section>
+
+<section id="10-pub-sub">
+<h2>10. Redis Pub/Sub & WebSockets</h2>
+
+<p>This connects closely with the WebSocket scaling architectural notes.</p>
+<p>If you have multiple WebSocket Spring Boot servers, they cannot talk to each other. If User A is connected to Server 1, and User B is connected to Server 2, how do they chat?</p>
+
+<div class="mermaid">
+flowchart TD
+    subgraph Clients
+        U1[User A]
+        U2[User B]
+    end
+
+    subgraph Chat Servers
+        S1[Server Node 1]
+        S2[Server Node 2]
+    end
+
+    Topic[(Redis Pub/Sub Channel 'chatroom')]
+
+    U1 -->|Sends Message| S1
+    S1 -->|Publishes Msg| Topic
+    Topic -->|Broadcasts to all Servers| S1
+    Topic -->|Broadcasts to all Servers| S2
+    S2 -->|Pushes to Client| U2
+</div>
+
+<div class="callout warning">
+<h3>The "At-Most-Once" Flaw</h3>
+<p>Redis Pub/Sub does <b>not</b> store the message. It broadcasts it mathematically in real-time. If Server 2 happens to be restarting at that exact second, the message is lost forever for User B. (Fire-and-forget).</p>
+</div>
+
+<hr/>
+</section>
+
+<section id="11-redis-streams">
+<h2>11. Redis Streams & Consumer Groups</h2>
+
+<p>To fix the data loss flaw in standard Pub/Sub, Redis released <b>Streams</b> in version 5.0. It is a full-blown event streaming platform built directly into Redis.</p>
+
+<p>Streams act like an append-only log (very similar to Apache Kafka, but lightweight). It completely changes how microservices communicate with each other.</p>
+
+<div class="callout note">
+<h3>How Redis Streams Work Internally</h3>
+<ul>
+  <li><b>Event Storage (`XADD`):</b> Messages are durably stored in RAM (and persisted to disk via AOF). If no one is listening right now, they wait safely in the stream.</li>
+  <li><b>Consumer Groups (`XGROUP`):</b> You can create a group of 5 identical microservices. Redis ensures that a single incoming event is only sent to <b>one</b> of the 5 services, acting identically to a load balancer (competing consumers).</li>
+  <li><b>Pending Entries List (PEL):</b> When an event is sent to a consumer, Redis doesn't blindly delete it. It moves it to the PEL. Redis waits for the consumer to finish processing and explicitly say "I'm done" via an <b>`XACK`</b> command.</li>
+  <li><b>Replay & Recovery:</b> If a microservice crashes mid-processing and never sends an `XACK`, another microservice can claim that abandoned message (`XCLAIM`) after a timeout and finish the job. Zero lost data!</li>
+</ul>
+</div>
+
+<div class="mermaid">
+flowchart LR
+    Producer[Order Service] -->|"XADD (order_stream)"| Stream[(Redis Stream)]
+    
+    subgraph ConsumerGroup["Consumer Group (Email Services)"]
+        Consumer1[Email Node 1]
+        Consumer2[Email Node 2]
+    end
+    
+    Stream -->|"Reads Event 1"| Consumer1
+    Stream -->|"Reads Event 2"| Consumer2
+    
+    Consumer1 -.->|"Crash mid-process! No XACK"| Stream
+    Consumer2 -->|"Sends XACK for Event 2"| Stream
+    
+    Consumer2 -.->|"Detects Stale Event 1 & XCLAIM"| Stream
+</div>
+
+<hr/>
+</section>
+
+<section id="12-distributed-locking">
+<h2>12. Distributed Locking & Redlock</h2>
+
+<p>Imagine an e-commerce site where ONLY 1 unit of an iPhone is left in stock. You have 5 backend servers running to handle scale.</p>
+<p>Server A and Server B both get a "buy" request at the exact same millisecond. They both query the DB: <code>Stock = 1</code>. They both run the payment. Now stock is -1. <i>Overselling!</i></p>
+
+<div class="callout warning">
+<h3>The Race Condition</h3>
+<p>In a distributed system, a simple SQL <code>WHERE stock > 0</code> is often not enough if the transaction requires calling 3rd party APIs (like Stripe). You must logically lock the specific product across all server nodes globally before proceeding.</p>
+</div>
+
+<h3>The Redis Mutex Lock (Vanilla)</h3>
+<p>We use Redis to create a global lock. If you hold the lock, you proceed. If not, you abort and tell the user "Item sold out."</p>
+
+<pre>
+> SET lock:iphone_stock "server_A_UUID_123" NX EX 5
+OK
+</pre>
+<ul>
+  <li><b>NX (Not eXists):</b> Will ONLY create the key if it doesn't already exist. Ensuring only ONE server gets the lock successfully. This is guaranteed atomic by Redis.</li>
+  <li><b>EX (Expiration):</b> Automatically unlocks after 5 seconds. If Server A crashes while holding the lock, we don't have a permanent distributed deadlock. The lock melts away.</li>
+  <li><b>UUID Value:</b> The value MUST be a unique ID for that specific thread. Why? If Server A takes 6 seconds to process, its lock expires at second 5. Server B safely grabs the lock. Then Server A finally finishes and blindly runs <code>DEL lock:iphone_stock</code>. Server A just accidentally deleted Server B's lock! You must check the UUID before deleting (always using a Lua Script for atomicity).</li>
+</ul>
+
+<div class="callout note">
+<h3>The Redlock Algorithm (For Absolute Safety)</h3>
+<p>There is a flaw in the vanilla lock: If you write the lock to the Redis Master node, and the Master instantly crashes <i>before</i> it replicates the lock to the Replica... another server could grab the exact same lock from the newly promoted Replica! (Two servers hold the lock at once).</p>
+<p>To fix this, Redis introduced <b>Redlock</b>. Your application must acquire the lock on a majority of independent Redis master instances (e.g., 3 out of 5) simultaneously. It's heavily used when locking is critical (like banking transactions).</p>
+</div>
+
+<hr/>
+</section>
+
+<section id="13-pipelining">
+<h2>13. Network Pipelining (The Ultimate Performance Hack)</h2>
+
+<p>
+If you need to execute 1,000 commands (like caching 1,000 newly generated objects), a beginner will run 1,000 <code>redisTemplate.opsForValue().set(...)</code> commands inside a `for` loop in Java.
+</p>
+
+<div class="callout warning">
+<h3>The Network Bottleneck</h3>
+<p>Redis can process over 100,000 commands a second natively in RAM. The CPU is never the problem.</p>
+<p>The problem is the <b>Network Round Trip Time (RTT)</b>. Sending a TCP packet from Spring Boot to the Redis proxy and waiting for the "OK" response takes, for example, 2 milliseconds per packet.</p>
+<p><code>1,000 commands × 2ms RTT = 2,000ms (2 entire seconds!)</code></p>
+</div>
+
+<h3>The Pipeline Solution</h3>
+<p>
+<b>Pipelining</b> groups all 1,000 commands into a single massive TCP packet, sends it once, and Redis executes them continuously without pausing to send individual wire replies. Redis then groups the 1,000 responses into ONE massive packet and ships it back.
+</p>
+
+<div class="mermaid">
+flowchart LR
+    subgraph NoPipeline["Without Pipelining (Slow)"]
+        App1[Spring Boot] -->|Send CMD 1| R1[Redis]
+        R1 -->|Reply OK| App1
+        App1 -->|Send CMD 2| R1
+        R1 -->|Reply OK| App1
+    end
+    
+    subgraph WithPipeline["With Pipelining (Instant)"]
+        App2[Spring Boot] -->|Send CMD 1...1000 together| R2[Redis]
+        R2 -->|Reply 1...1000 together| App2
+    end
+</div>
+
+<p>In Spring Boot, pipelining is executed safely via callbacks using the active socket connection:</p>
+<pre>
+// Time taken with Pipelining? 3 milliseconds.
+List&lt;Object&gt; results = redisTemplate.executePipelined((RedisCallback&lt;Object&gt;) connection -> {
+    StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
+    
+    for (int i = 0; i < 1000; i++) {
+        stringRedisConn.set("cache_key:" + i, "cached_value_" + i);
+    }
+    
+    return null; // Must return null for executePipelined to function properly!
+});
+</pre>
+
+<hr/>
+</section>
+
+<section id="14-high-availability">
+<h2>14. High Availability & Sharding Architectures</h2>
+
+<p>In production, you never run a single Redis instance. If the node dies, your system grinds to a halt.</p>
+
+<h3>1. Master-Replica Architecture (Scale Reads)</h3>
+<p>You have exactly one Master node. All writes go to the Master. The Master independently and asynchronously copies its RAM to 1 or more Replica nodes. You configure your Spring Boot app to safely offload all <code>GET</code> requests to the Replicas, freeing up the Master completely.</p>
+
+<h3>2. Redis Sentinel (Scale Uptime)</h3>
+<p>What happens if the Master node explodes? In a standard Master-Replica setup, you have to wake up at 3 AM and manually update your IP networking to point to a Replica.</p>
+<p><b>Redis Sentinel</b> is a separate orchestrator. You run 3 Sentinel nodes. They constantly ping the Master (`PING`/`PONG`). If the Master drops off the network:</p>
+<ol>
+  <li>The Sentinels vote (Quorum prevents "Split-Brain" if only 1 Sentinel dropped).</li>
+  <li>They automatically coordinate to promote the healthiest Replica to be the new Master.</li>
+  <li>They update the routing so clients like Spring Boot dynamically switch to the new Master IP with zero downtime.</li>
+</ol>
+
+<h3>3. Redis Cluster (Scale RAM / Sharding)</h3>
+<p>Because Redis is an In-Memory store, it is strictly limited by physical RAM. What if you have 1 Terabyte of Cache data? Most standard servers max out memory well before that.</p>
+<p>Redis Cluster literally splits your data horizontally across multiple Master nodes. It manages this using an algorithmic concept called <b>Hash Slots</b>.</p>
+
+<div class="mermaid">
+flowchart TD
+    App["Spring Boot Client"]
+    
+    App -->|"Writes 'user:55'"| Router["Cluster Routing Logic"]
+    
+    subgraph HashSlots["Hash Slots (Total 16,384)"]
+        M1["Master Node 1<br/>Slots 0-5460"]
+        M2["Master Node 2<br/>Slots 5461-10922"]
+        M3["Master Node 3<br/>Slots 10923-16383"]
+    end
+    
+    Router -.->|"CRC16('user:55') modulo 16384 = Slot 8912"| M2
+</div>
+
+<div class="callout note">
+<h3>How Hash Slots route terabytes of data:</h3>
+<ul>
+  <li>There are exactly <b>16,384 Hash Slots</b> built into Redis natively.</li>
+  <li>Every Master node in the cluster claims a mathematical range of slots.</li>
+  <li>When you write a key (e.g., `user:55`), your <i>Lettuce/Jedis</i> client runs a hash function <code>CRC16("user:55") modulo 16384</code> locally. This yields an integer between 0 and 16383.</li>
+  <li>The client maps that integer instantly and fires the TCP traffic directly to the exact Master that owns that slot.</li>
+  <li><b>Gossip Protocol:</b> All nodes constantly talk to each other to know who is alive and who owns which slots, broadcasting topology updates.</li>
+</ul>
+</div>
+
+<hr/>
+</section>
+
+<section id="15-spring-boot-integration">
+<h2>15. Spring Boot Deep Dive (Classes & Config)</h2>
+
+<p>How Java Architects actually implement Redis in Spring Boot.</p>
+
+<div class="callout note">
+<h3>1. The Core Infrastructure (Connection Factory & Templates)</h3>
+<ul>
+  <li><b>RedisConnectionFactory:</b> The low-level interface connecting to the socket. Backed by driver libraries like <b>Lettuce</b> (modern, non-blocking, async based on Netty) or <b>Jedis</b> (older, synchronous).</li>
+  <li><b>RedisTemplate&lt;K, V&gt;:</b> The primary abstraction over Redis commands. Serializes Java objects to bytes and pushes them to Redis.</li>
+  <li><b>StringRedisTemplate:</b> A pre-configured RedisTemplate specifically for String keys and String values (widely preferred because JSON string values are easier to debug via CLI than binary streams).</li>
+</ul>
+</div>
+
+<h3>2. Absolute Best Practice: Multiple TTL Caching Configuration</h3>
+<p>
+Beginners use `@Cacheable` and everything lives forever in Redis. Professionals create a custom `RedisCacheManager` where different cache names have different TTLs!
+</p>
+
+<pre>
+@Configuration
+@EnableCaching  // Enables Spring's annotation-driven caching
+public class RedisConfig {
+
+    @Bean
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        
+        // Default Config: Everything expires in 1 Hour, storing values as JSON
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
+            .entryTtl(Duration.ofHours(1))
+            .serializeValuesWith(SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+
+        // Specific Configs: "short-lived" -> 5 minutes, "long-lived" -> 24 hours
+        Map&lt;String, RedisCacheConfiguration&gt; customConfigurations = new HashMap<>();
+        
+        customConfigurations.put("live_prices", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        customConfigurations.put("static_settings", defaultConfig.entryTtl(Duration.ofDays(1)));
+
+        return RedisCacheManager.builder(connectionFactory)
+                .cacheDefaults(defaultConfig)
+                .withInitialCacheConfigurations(customConfigurations)
+                .build();
+    }
+}
+</pre>
+
+<h3>3. Using the Annotations</h3>
+
+<pre>
+@Service
+public class ProductService {
+
+    // Reads from Redis first. If MISS, runs method, saves result to Redis for 5 mins.
+    @Cacheable(value = "live_prices", key = "#productId")
+    public PriceData getPrice(Long productId) {
+        return fetchFromSlowDatabase(productId);
+    }
+
+    // Always runs method, and UPDATES the cache with the new value. (Used on Update APIs)
+    @CachePut(value = "live_prices", key = "#product.id")
+    public PriceData updatePrice(Product product) {
+        return saveToDatabase(product);
+    }
+
+    // Completely DELETES the cached item. (Used on Delete APIs)
+    @CacheEvict(value = "live_prices", key = "#productId")
+    public void deleteProduct(Long productId) {
+        deleteFromDatabase(productId);
+    }
+}
+</pre>
+
+<hr/>
+</section>
+
+<section id="16-real-world">
+<h2>16. Real-World Use Cases</h2>
+
+<ul>
+  <li><b>Instagram / Twitter (Leaderboards & Feeds):</b> Generating your timeline via SQL takes seconds. They pre-compute the feed as you sleep and store it in Redis <b>Lists</b>.</li>
+  <li><b>YouTube (View Counting):</b> SQL cannot handle the same row updating 100,000 times a second without DB locking. Redis <code>INCR</code> avoids locks, tallying views in RAM, and a scheduled job flushes the total to SQL every 10 minutes.</li>
+  <li><b>Netflix (Distributed Sessions):</b> Storing user login tokens in a central Redis cluster so any microservice can verify if you are logged in instantly.</li>
+  <li><b>Rate Limiting (APIs):</b> "User X can only make 10 requests per minute." Using Redis <code>INCR</code> and <code>EXPIRE</code> to track request counts.</li>
+</ul>
+
+<hr/>
+</section>
+
+<section id="17-comparison">
+<h2>17. Redis vs Kafka vs RabbitMQ</h2>
+
+<p>Many beginners confuse these because they can all act as "Message Brokers".</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Architecture</th>
+      <th>Best For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Redis</b></td>
+      <td>In-Memory, Key-Value, Pub/Sub</td>
+      <td><b>Ultra-fast realtime signaling</b>. Multi-server scaling, caches, temporary chats where 1ms latency is critical. (Ephemeral).</td>
+    </tr>
+    <tr>
+      <td><b>Apache Kafka</b></td>
+      <td>Disk-Based Sequential Event Log</td>
+      <td><b>Durable event streaming & big data</b>. Tracking system-wide logs, microservice orchestration where order, historical replayability, and huge scaling are mandatory.</td>
+    </tr>
+    <tr>
+      <td><b>RabbitMQ</b></td>
+      <td>AMQP Queueing System</td>
+      <td><b>Reliable background task queueing</b>. Email sending jobs, video processing tasks, where complex routing rules and guaranteed delivery (ACKs) are required.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr/>
+</section>
+
+<section id="18-interview-questions">
+<h2>18. Senior Interview Questions</h2>
+
+<div class="callout note">
+<h3>Test Your Understanding</h3>
+<ol>
+  <li><b>Why is Redis so fast compared to traditional databases?</b><br>
+  <i>(Answer: Extreme simplicity. It runs entirely in RAM, avoids disk rotational latency, utilizes O(1) algorithms, and avoids context-switching hardware-level locks by using a single-threaded event loop.)</i></li>
+  
+  <li><b>Why is Redis single-threaded? Isn't multi-threading faster?</b><br>
+  <i>(Answer: Network bandwidth and memory speed are the bottlenecks, not CPU. A single thread avoids context switching and locking/race conditions. Note: Redis 6.0 introduced multi-threading for network I/O, but actual query processing remains strictly single-threaded.)</i></li>
+  
+  <li><b>How do you prevent a Cache Stampede when a viral key expires?</b><br>
+  <i>(Answer: Using a mutual exclusion algorithm (Redis Lock/Mutex). When a key misses, the first thread acquires the lock and queries SQL. All other threads fail the lock and sleep briefly before checking the cache again.)</i></li>
+  
+  <li><b>What is the difference between Cache and Persistence in Redis?</b><br>
+  <i>(Answer: Cache is volatile and relies on TTLs and Eviction Policies. Persistence (RDB/AOF) writes snapshots or transaction logs to the disk to survive server reboots or crashes.)</i></li>
+  
+  <li><b>If I have 5 Terabytes of data, how do I configure Redis?</b><br>
+  <i>(Answer: A single server doesn't have 5TB of RAM. You must use Redis Cluster mode to geographically shard the keys using Hash Slots across multiple master nodes.)</i></li>
+
+</ol>
+</div>
+
+</section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const toggleTheme = () => {
+      const html = document.documentElement;
+      const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+    };
+
+    const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
+
+    const mainContent = document.getElementById('main-content');
+    const progressBar = document.getElementById('progress-bar');
+    
+    mainContent.onscroll = () => {
+      const winScroll = mainContent.scrollTop;
+      const height = mainContent.scrollHeight - mainContent.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      progressBar.style.width = scrolled + "%";
+    };
+
+    const searchBar = document.getElementById('search-bar');
+    const searchInput = document.getElementById('search');
+    
+    const toggleSearch = (show) => {
+      searchBar.classList.toggle('active', show);
+      if (show) searchInput.focus();
+    };
+
+    searchInput.oninput = () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll('section').forEach(s => {
+        s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+      });
+    };
+
+    const downloadPDF = () => {
+      document.querySelectorAll('details').forEach(d => d.open = true);
+      window.print();
+    };
+  </script>
+</body>
+</html>
