@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Java Masters: From Beginner to Architect</title>
+  
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll('table').forEach(table => {
+        const wrapper = document.createElement('div');
+        wrapper.style.overflowX = 'auto';
+        wrapper.style.margin = '20px 0';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+        table.style.margin = '0';
+      });
+    });
+  </script>
+
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --bg-secondary: #fbfcfe;
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --border-color: #e2e8f0;
+      --accent-color: #f59e0b;
+      --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --code-bg: #1e293b;
+      --code-text: #e2e8f0;
+      --note-bg: #fffbeb;
+      --note-border: #f59e0b;
+      --warning-bg: #fffaf5;
+      --warning-border: #fb923c;
+      --font-family: 'Inter', sans-serif;
+      --mono-font: 'JetBrains Mono', monospace;
+      --header-height: 64px;
+      --sidebar-width: 280px;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --bg-secondary: #1e293b;
+      --glass-bg: rgba(15, 23, 42, 0.9);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --border-color: #334155;
+      --accent-color: #fbbf24;
+      --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+      --note-bg: #2a1b0a;
+      --note-border: #f59e0b;
+      --warning-bg: #2a2010;
+      --warning-border: #fb923c;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0; font-family: var(--font-family);
+      background: var(--bg-color); color: var(--text-primary);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+    header {
+      position: sticky; top: 0; height: var(--header-height);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 16px; border-bottom: 1px solid var(--border-color);
+      background: var(--glass-bg); backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px); z-index: 1000;
+    }
+
+    #progress-bar {
+      position: absolute; bottom: -1px; left: 0; height: 2px;
+      background: var(--accent-gradient); width: 0%; transition: width 0.1s ease;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 12px; }
+
+    #menu-toggle {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      font-size: 1.2rem; color: var(--text-primary); cursor: pointer;
+      width: 40px; height: 40px; border-radius: 10px;
+    }
+
+    header h1 {
+      font-size: 0.85rem; margin: 0; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+    }
+
+    header h1 span { background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+
+    header input {
+      width: 100%; padding: 10px 12px 10px 40px; border: 1px solid var(--border-color);
+      border-radius: 12px; background: var(--bg-secondary); color: var(--text-primary);
+      font-size: 0.9rem; outline: none; transition: all 0.3s ease;
+    }
+
+    .search-wrapper {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color); z-index: 10; display: none;
+      align-items: center; padding: 0 16px;
+    }
+
+    .search-wrapper.active { display: flex; }
+
+    #search-close { background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); padding: 8px; cursor: pointer; }
+
+    #search-toggle {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .search-wrapper { position: relative; display: flex; background: transparent; padding: 0; width: 280px; }
+      #search-toggle, #search-close { display: none !important; }
+      header input { width: 280px; }
+      header input:focus { width: 320px; border-color: var(--accent-color); }
+    }
+
+    #theme {
+      border: 1px solid var(--border-color); background: var(--bg-secondary);
+      border-radius: 10px; width: 40px; height: 40px; cursor: pointer;
+      color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+    }
+
+    nav {
+      position: fixed; left: 0; top: 0; bottom: 0; width: var(--sidebar-width);
+      background: var(--bg-color); z-index: 1100; padding: 24px 16px;
+      transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid var(--border-color);
+    }
+
+    .sidebar-open nav { transform: translateX(0); }
+
+    #backdrop {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px); z-index: 1050; display: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+
+    .sidebar-open #backdrop { display: block; opacity: 1; }
+
+    nav h2 { font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); margin: 24px 0 8px 12px; font-weight: 800; letter-spacing: 1px; }
+
+    nav a { padding: 12px 16px; color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 12px; transition: all 0.2s ease; }
+
+    nav a:hover, nav a.active { color: var(--accent-color); background: var(--bg-secondary); }
+
+    .nav-footer { margin-top: auto; padding-top: 20px; }
+
+    .download-btn {
+      width: 100%; padding: 10px 16px; background: var(--accent-gradient);
+      color: white; border: none; border-radius: 10px; font-weight: 600;
+      font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; transition: all 0.2s ease;
+    }
+
+    main { flex: 1; overflow-y: auto; padding: 32px 20px; scroll-behavior: smooth; }
+
+    h1 { font-size: 2.25rem; font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 16px; }
+    h2 { font-size: 1.5rem; font-weight: 700; margin-top: 40px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    h2::before { content: ''; width: 4px; height: 20px; background: var(--accent-gradient); border-radius: 2px; }
+    h3 { margin-top: 30px; font-weight: 700; color: var(--accent-color); }
+
+    .callout { padding: 20px; border-radius: 16px; margin: 24px 0; border: 1px solid; display: flex; flex-direction: column; gap: 8px; }
+    .note { background: var(--note-bg); border-color: var(--note-border); }
+    .warning { background: var(--warning-bg); border-color: var(--warning-border); }
+
+    pre { padding: 20px; border-radius: 16px; background: var(--code-bg); color: var(--code-text); overflow-x: auto; margin: 24px 0; border: 1px solid var(--border-color); font-family: var(--mono-font); font-size: 0.92rem;}
+
+    table{
+      border-collapse: collapse;
+      width:100%;
+      min-width: 500px;
+    }
+    table td, table th{
+      border:1px solid var(--border-color);
+      padding:12px;
+      text-align: left;
+    }
+    table th{
+      background: var(--bg-secondary);
+      font-weight: 600;
+    }
+    
+    .mermaid {
+      margin: 30px 0;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media (min-width: 1024px) {
+      .app { display: grid; grid-template-areas: "header header" "sidebar main"; grid-template-columns: var(--sidebar-width) 1fr; grid-template-rows: var(--header-height) 1fr; }
+      nav { grid-area: sidebar; position: static; transform: none; padding: 40px 24px; background: var(--bg-secondary); }
+      #menu-toggle, #backdrop { display: none !important; }
+      main { grid-area: main; padding: 60px 100px; }
+    }
+
+    .hidden { display: none !important; }
+    .print-only, .pdf-cover, .print-footer { display: none !important; }
+
+    @page { size: A4; margin: 0; }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { margin: 10mm; }
+      .pdf-cover { margin: -10mm !important; }
+      pre { background: #f8fafc !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+      pre code, :not(pre) > code { color: #0f172a !important; background: #f1f5f9 !important; }
+      .callout { background: white !important; color: black !important; border: 1px solid #cbd5e1 !important; }
+      .callout.note { border-left: 4px solid #f59e0b !important; }
+      .callout.warning { border-left: 4px solid #fb923c !important; }
+      .print-only { display: block !important; }
+      .print-footer { display: block !important; position: fixed; bottom: 5mm; right: 10mm; font-size: 8pt; color: #94a3b8; font-weight: 600; }
+      header, nav, #backdrop, .download-btn, #theme, #search-toggle { display: none !important; }
+      body, .app, main { display: block !important; height: auto !important; overflow: visible !important; background: white !important; color: black !important; }
+      main { padding: 0 !important; margin: 0 !important; }
+      .pdf-cover { display: flex !important; flex-direction: row; width: 210mm; height: 297mm; text-align: left; page-break-after: always; background: white; margin: 0 !important; padding: 0 !important; box-sizing: border-box; overflow: hidden; }
+      .pdf-cover .sidebar { width: 60mm; background: #d97706; display: flex; flex-direction: column; justify-content: flex-end; padding: 40px; color: white; }
+      .pdf-cover .main-area { flex: 1; padding: 80px 50px; display: flex; flex-direction: column; justify-content: center; }
+      .pdf-cover .logo-vertical { font-size: 24pt; font-weight: 900; letter-spacing: 6px; writing-mode: vertical-rl; transform: rotate(180deg); opacity: 0.9; margin-bottom: 20px; }
+      .pdf-cover .badge { background: #fffbeb; color: #d97706; padding: 8px 16px; border-radius: 99px; font-size: 11pt; font-weight: 800; width: fit-content; margin-bottom: 24px; text-transform: uppercase; }
+      .pdf-cover h1 { font-size: 56pt !important; font-weight: 900; line-height: 1.1; color: #0f172a !important; margin: 0 0 20px 0 !important; border: none !important; letter-spacing: -2px; }
+      .pdf-cover .subtitle { font-size: 18pt; color: #475569; line-height: 1.4; margin-bottom: 60px; max-width: 450px; }
+      .pdf-cover .author-section { margin-top: auto; }
+      .pdf-cover .author-label { font-size: 10pt; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; font-weight: 700; }
+      .pdf-cover .author-name { font-size: 20pt; font-weight: 800; color: #0f172a; }
+      section { page-break-inside: auto; margin-bottom: 30pt; display: block !important; }
+      h1, h2, h3 { page-break-after: avoid; }
+      pre, .callout, table { page-break-inside: avoid; }
+    }
+  
+    nav::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+  <div class="print-footer">daxin.dev notes</div>
+
+  <div class="print-only pdf-cover">
+    <div class="sidebar">
+      <div class="logo-vertical">DAXIN.DEV</div>
+    </div>
+    <div class="main-area">
+      <div class="badge">Mastery Series • 2026</div>
+      <h1>MODERN JAVA<br>MASTERS</h1>
+      <p class="subtitle">Complete technical roadmap from Java 8 basics to Java 21 high-concurrency architectures.</p>
+      <div class="author-section">
+        <div class="author-label">Authored By</div>
+        <div class="author-name">Dakhin Tudu</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="backdrop" onclick="toggleSidebar()"></div>
+  <div class="app">
+    <header>
+      <div id="progress-bar"></div>
+      <div class="header-left">
+        <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1><span>MODERN JAVA</span> MASTERS</h1>
+      </div>
+      <div class="header-actions">
+        <button id="search-toggle" onclick="toggleSearch(true)">🔍</button>
+        <div class="search-wrapper" id="search-bar">
+          <input id="search" placeholder="Search documentation...">
+          <button id="search-close" onclick="toggleSearch(false)">✕</button>
+        </div>
+        <button id="theme" onclick="toggleTheme()">◑</button>
+      </div>
+    </header>
+
+    <nav id="sidebar">
+      <h2>1. The Big Picture</h2>
+      <a href="#1-why-modern" onclick="if(window.innerWidth < 1024) toggleSidebar()">Why Modern Java?</a>
+      <a href="#1b-version-history" onclick="if(window.innerWidth < 1024) toggleSidebar()">LTS Version History</a>
+
+      <h2>2. Functional Core</h2>
+      <a href="#2-functional-interfaces" onclick="if(window.innerWidth < 1024) toggleSidebar()">Functional Interfaces</a>
+      <a href="#3-lambdas" onclick="if(window.innerWidth < 1024) toggleSidebar()">Lambda Deep Dive</a>
+      <a href="#4-method-refs" onclick="if(window.innerWidth < 1024) toggleSidebar()">Method References</a>
+
+      <h2>3. The Stream API</h2>
+      <a href="#5-stream-basics" onclick="if(window.innerWidth < 1024) toggleSidebar()">Stream Foundations</a>
+      <a href="#6-stream-intermediate" onclick="if(window.innerWidth < 1024) toggleSidebar()">Intermediate Operations</a>
+      <a href="#7-stream-terminal" onclick="if(window.innerWidth < 1024) toggleSidebar()">Terminal Operations</a>
+      <a href="#8-collectors" onclick="if(window.innerWidth < 1024) toggleSidebar()">Advanced Collectors</a>
+
+      <h2>4. Robust Data</h2>
+      <a href="#9-optional" onclick="if(window.innerWidth < 1024) toggleSidebar()">Optional Class</a>
+      <a href="#10-records" onclick="if(window.innerWidth < 1024) toggleSidebar()">Records & Immutability</a>
+      <a href="#11-sealed" onclick="if(window.innerWidth < 1024) toggleSidebar()">Sealed Classes</a>
+
+      <h2>5. Expressive Syntax</h2>
+      <a href="#12-switch" onclick="if(window.innerWidth < 1024) toggleSidebar()">Switch Expressions</a>
+      <a href="#13-pattern-matching" onclick="if(window.innerWidth < 1024) toggleSidebar()">Pattern Matching</a>
+      <a href="#14-bonus" onclick="if(window.innerWidth < 1024) toggleSidebar()">Bonus API (Sequenced/String)</a>
+      <a href="#15-text-blocks" onclick="if(window.innerWidth < 1024) toggleSidebar()">Text Blocks & Var</a>
+
+      <h2>6. Concurrency</h2>
+      <a href="#16-completablefuture" onclick="if(window.innerWidth < 1024) toggleSidebar()">CompletableFuture</a>
+      <a href="#17-virtual-threads" onclick="if(window.innerWidth < 1024) toggleSidebar()">Virtual Threads (21)</a>
+
+      <h2>7. Mastery & Exams</h2>
+      <a href="#18-perf-gc" onclick="if(window.innerWidth < 1024) toggleSidebar()">Performance & GC</a>
+      <a href="#19-interview" onclick="if(window.innerWidth < 1024) toggleSidebar()">Interview Masterclass</a>
+      
+      <div class="nav-footer">
+        <button class="download-btn" onclick="downloadPDF()">Export as PDF</button>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <div class="content">
+
+<section id="1-why-modern">
+<h1>1. Modern Java: The Evolution of Writing Code</h1>
+
+<p>
+Imagine you are writing a letter. 
+</p>
+
+<ul>
+  <li><b>Old Java (Pre-8):</b> You have to describe every single hand movement: pick up pen, touch paper, move right, lift pen. (Imperative).</li>
+  <li><b>Modern Java (8+):</b> You just say "Write 'Hello'". You focus on the <i>intent</i>, not the mechanical execution. (Declarative).</li>
+</ul>
+
+<div class="callout note">
+<h3>The Main Shift</h3>
+<p>Modern Java is about moving from <b>How</b> to <b>What</b>. 
+  Instead of writing 10 lines of code to loop through a list and find a user, you write 1 line that says "Give me the user where name is Daxin".</p>
+</div>
+
+<div class="callout note">
+<h3>Real World Example: Finding an Item</h3>
+<pre><code>// OLD WAY (Imperative)
+User found = null;
+for (User u : users) {
+    if (u.getName().equals("Daxin")) {
+        found = u;
+        break;
+    }
+}
+
+// MODERN WAY (Declarative)
+User found = users.stream()
+    .filter(u -> u.getName().equals("Daxin"))
+    .findFirst()
+    .orElse(null);</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="1b-version-history">
+<h2>1.1 LTS Version History (The Roadmap)</h2>
+
+<p>In the professional world, we mostly care about <b>LTS (Long Term Support)</b> versions. These are the "stable" milestones used by banks and tech giants.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Version</th>
+      <th>Release</th>
+      <th>"The Big Deal" Feature</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Java 8</b></td>
+      <td>2014</td>
+      <td>Lambdas, Streams, Optional. (The <i>Functional</i> Revolution).</td>
+    </tr>
+    <tr>
+      <td><b>Java 11</b></td>
+      <td>2018</td>
+      <td><code>var</code>, HttpClient, Performance improvements.</td>
+    </tr>
+    <tr>
+      <td><b>Java 17</b></td>
+      <td>2021</td>
+      <td>Records, Sealed Classes, Pattern Matching. (The <i>Structure</i> Revolution).</td>
+    </tr>
+    <tr>
+      <td><b>Java 21</b></td>
+      <td>2023</td>
+      <td>Virtual Threads. (The <i>Concurrency</i> Revolution).</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr/>
+</section>
+
+<section id="2-functional-interfaces">
+<h2>2. Functional Interfaces: The "Grammar"</h2>
+
+<p>
+Before you can use Lambdas, you need to understand the "Container" they fit into. That container is a <b>Functional Interface</b>.
+</p>
+
+<div class="callout note">
+<h3>What is it exactly?</h3>
+<p>It's just an interface with <b>only one abstract method</b>. 
+If it has more than one, it is NOT functional. Java uses the <code>@FunctionalInterface</code> annotation to help the compiler enforce this.</p>
+</div>
+
+<h3>The 4 Universal Patterns</h3>
+<p>Java provides 4 standard interfaces that cover almost every scenario. Learn these and you won't need to define your own.</p>
+
+<div class="mermaid">
+graph TD
+    A[Data In] --> B{Process Type}
+    B -->|Return Boolean| C[Predicate]
+    B -->|Transform Data| D[Function]
+    B -->|Consume Only| E[Consumer]
+    B -->|Generate Only| F[Supplier]
+</div>
+
+<ol>
+  <li><b>Predicate&lt;T&gt;:</b> Takes one input, returns <code>true/false</code>.
+    <pre><code>Predicate&lt;Integer&gt; isOldEnough = (age) -> age >= 18;</code></pre>
+  </li>
+  <li><b>Function&lt;T, R&gt;:</b> Takes input T, returns result R.
+    <pre><code>Function&lt;String, Integer&gt; strLen = (s) -> s.length();</code></pre>
+  </li>
+  <li><b>Consumer&lt;T&gt;:</b> Takes input, returns <b>nothing</b> (void).
+    <pre><code>Consumer&lt;String&gt; logger = (msg) -> System.out.println(msg);</code></pre>
+  </li>
+  <li><b>Supplier&lt;T&gt;:</b> Takes <b>nothing</b>, returns a value.
+    <pre><code>Supplier&lt;Double&gt; random = () -> Math.random();</code></pre>
+  </li>
+</ol>
+
+<h3>The Default Method "Diamond Problem"</h3>
+<p>Modern interfaces can have <code>default</code> methods. If you implement two interfaces that have the same method name, you get a <b>Diamond Problem</b>.</p>
+<div class="callout warning">
+<pre><code>interface A { default void hello() { out.print("A"); } }
+interface B { default void hello() { out.print("B"); } }
+
+class MyClass implements A, B {
+    @Override
+    public void hello() {
+        A.super.hello(); // You MUST explicitly choose which one to call
+    }
+}</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="3-lambdas">
+<h2>3. Lambda Expression Deep Dive</h2>
+
+<p>
+A Lambda is essentially a <b>method without a name</b> that you can pass around as data.
+</p>
+
+<h3>Evolution: From Anonymous to Lambda</h3>
+
+<div class="callout warning">
+<h3>Level 0: Java 7 (Anonymous Class)</h3>
+<pre><code>Runnable r = new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("Hello");
+    }
+};</code></pre>
+<p>Too much "boilerplate" (useless code).</p>
+</div>
+
+<div class="callout note">
+<h3>Level 1: Basic Lambda</h3>
+<pre><code>Runnable r = () -> {
+    System.out.println("Hello");
+};</code></pre>
+</div>
+
+<div class="callout note">
+<h3>Level 2: One-Liner Perfection</h3>
+<pre><code>Runnable r = () -> System.out.println("Hello");</code></pre>
+</div>
+
+<h3>Under the Hood (For Advanced Learners)</h3>
+<p>Is a Lambda just a shortcut for an Anonymous class? <b>NO.</b></p>
+<ul>
+  <li><b>Memory:</b> Anonymous classes create a new <code>.class</code> file for Every. Single. Instance. (Heavy).</li>
+  <li><b>Mechanism:</b> Lambdas use a JVM instruction called <code>invokedynamic</code>. They are executed as private methods on the class they are defined in. They are much faster and lighter.</li>
+</ul>
+
+<hr/>
+</section>
+
+<section id="4-method-refs">
+<h2>4. Method References: The Final Stage of Clarity</h2>
+
+<p>
+If your Lambda just calls a method that already exists, don't write the lambda. Use a <b>Method Reference</b> (<code>::</code>).
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Pattern</th>
+      <th>Lambda</th>
+      <th>Method Reference</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Static Method</td>
+      <td><code>(s) -> Integer.parseInt(s)</code></td>
+      <td><code>Integer::parseInt</code></td>
+    </tr>
+    <tr>
+      <td>Instance Method</td>
+      <td><code>(s) -> System.out.println(s)</code></td>
+      <td><code>System.out::println</code></td>
+    </tr>
+    <tr>
+      <td>Constructor</td>
+      <td><code>() -> new ArrayList<>()</code></td>
+      <td><code>ArrayList::new</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout note">
+<h3>Code Example: Cleaning a String List</h3>
+<pre><code>List&lt;String&gt; names = List.of(" daxin ", " tudu ", " java ");
+
+// Lambda Way:
+names.stream().map(s -> s.trim()).forEach(s -> System.out.println(s));
+
+// Method Reference Way (Cleaner):
+names.stream().map(String::trim).forEach(System.out::println);</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="5-stream-basics">
+<h2>5. Stream API: The Data Pipeline</h2>
+
+<p>
+A Stream is a sequence of objects that you can process in a pipeline. 
+<b>Important:</b> A Stream does NOT store data. It only moves data from a Source (like a List) to a Destination.
+</p>
+
+<div class="mermaid">
+graph LR
+    S[Source: List/Set] --> I1[Intermediate: filter]
+    I1 --> I2[Intermediate: map]
+    I2 --> T[Terminal: collect]
+    T --> R[Result: New List/Map]
+</div>
+
+<div class="callout note">
+<h3>Why use Streams?</h3>
+<p>Because they are <b>Lazy</b>. If you have a list of a million items and you only need the first 3 that pass a filter, Java will stop looking at the list as soon as it finds those 3. A traditional <code>for-loop</code> wouldn't be this smart automatically.</p>
+</div>
+
+<div class="callout note">
+<h3>The Basic Pattern</h3>
+<pre><code>List&lt;String&gt; result = list.stream()   // 1. Create Stream
+    .filter(s -> s.length() > 5)     // 2. Intermediate Op
+    .limit(3)                        // 3. Intermediate Op
+    .toList();                       // 4. Terminal Op</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="6-stream-intermediate">
+<h2>6. Intermediate Operations: Transforming Data</h2>
+
+<p>These methods return a <b>new Stream</b>. They are lazy—they don't execute until you call a terminal method.</p>
+
+<ul>
+  <li><b><code>filter(Predicate)</code>:</b> Removes unwanted items.
+    <pre><code>.filter(name -> name.startsWith("D"))</code></pre>
+  </li>
+  <li><b><code>map(Function)</code>:</b> Changes the type or content.
+    <pre><code>.map(User::getEmail) // Converts User object to String email</code></pre>
+  </li>
+  <li><b><code>flatMap(Function -> Stream)</code>:</b> Used for nested collections. "Flattens" multiple streams into one.
+    <pre><code>// List of Orders -> Each has List of Items -> flatMap gives 1 Stream of Items
+.flatMap(order -> order.getItems().stream())</code></pre>
+  </li>
+  <li><b><code>distinct()</code>:</b> Removes duplicates based on <code>equals()</code>.</li>
+  <li><b><code>sorted()</code>:</b> Sorts the stream.</li>
+  <li><b><code>peek(Consumer)</code>:</b> Used for debugging. Doesn't change data.
+    <pre><code>.peek(u -> System.out.println("Processing: " + u))</code></pre>
+  </li>
+</ul>
+
+<div class="callout note">
+<h3>The flatMap Visual Trace</h3>
+<p>Think of <code>flatMap</code> as an "Unwrapper".</p>
+<pre><code>// 1. You have a list of Lists: [[A, B], [C, D]]
+// 2. Map would give you: Stream of [A, B] and Stream of [C, D] (Nested!)
+// 3. FlatMap "flattens" the folders:
+//    [A, B, C, D]
+</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="7-stream-terminal">
+<h2>7. Terminal Operations: The End of the Road</h2>
+
+<p>These methods <b>trigger the execution</b> of the pipeline and return a final value (not a stream).</p>
+
+<ul>
+  <li><b><code>forEach(Consumer)</code>:</b> Do something with every item (e.g., Print).</li>
+  <li><b><code>collect(Collector)</code>:</b> Convert back to a List, Set, or Map.</li>
+  <li><b><code>count()</code>:</b> Returns the number of items.</li>
+  <li><b><code>anyMatch / allMatch / noneMatch</code>:</b> Returns <code>boolean</code>. Perfect for validation.</li>
+  <li><b><code>findFirst / findAny</code>:</b> Returns an <code>Optional</code>.</li>
+  <li><b><code>reduce(Identity, accumulator)</code>:</b> Combines all items into one (e.g., Summing numbers).
+    <pre><code>int sum = numbers.stream().reduce(0, (a, b) -> a + b);</code></pre>
+  </li>
+</ul>
+
+<hr/>
+</section>
+
+<section id="8-collectors">
+<h2>8. Advanced Collectors (The Professional Level)</h2>
+
+<p>The <code>Collectors</code> utility class is where the complexity lies in backend engineering.</p>
+
+<h3>1. groupingBy (Categorization)</h3>
+<pre><code>// Result: Map&lt;Department, List&lt;Employee&gt;&gt;
+Map&lt;String, List&lt;Employee&gt;&gt; employeesByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment));</code></pre>
+
+<h3>2. toMap (Mapping Objects)</h3>
+<pre><code>// Map of ID to User Object
+Map&lt;Long, User&gt; userMap = users.stream()
+    .collect(Collectors.toMap(User::getId, user -> user));</code></pre>
+
+<h3>3. Extreme Nesting (Multi-Level Grouping)</h3>
+<p>A Senior skill is grouping data by <i>multiple</i> criteria simultaneously.</p>
+<pre><code>// Goal: Map&lt;Department, Map&lt;Level, Double&gt;&gt; (Avg Salary per Level per Dept)
+var complexReport = employees.stream()
+    .collect(Collectors.groupingBy(
+        Employee::getDept,
+        Collectors.groupingBy(
+            Employee::getLevel,
+            Collectors.averagingDouble(Employee::getSalary)
+        )
+    ));</code></pre>
+
+<h3>4. teeing (Double Aggregation - Java 12)</h3>
+<p>Calculate two things at once! E.g., Average and Sum.</p>
+<pre><code>var summary = players.stream().collect(
+    Collectors.teeing(
+        Collectors.summingInt(Player::getScore),
+        Collectors.averagingInt(Player::getScore),
+        (sum, avg) -> new ScoreStats(sum, avg)
+    )
+);</code></pre>
+
+<hr/>
+</section>
+
+<section id="9-optional">
+<h2>9. Optional: The "Safety Box"</h2>
+
+<p>
+<code>Optional&lt;T&gt;</code> is a box. It might contain a value, or it might be empty. It prevents the <code>NullPointerException</code> "billion-dollar mistake".
+</p>
+
+<h3>The "Safe" Lifecycle</h3>
+<pre><code>Optional&lt;User&gt; user = repo.findById(id);
+
+// 1. Map if exists
+Optional&lt;String&gt; email = user.map(User::getEmail);
+
+// 2. Default value if empty
+String out = email.orElse("default@mail.com");
+
+// 3. Logic if exists
+user.ifPresent(u -> System.out.println("Online: " + u.getName()));
+
+// 4. Throw exception if empty
+user.orElseThrow(() -> new RuntimeException("Not found"));</code></pre>
+
+<div class="callout warning">
+<h3>Senior Rule: No .get()!</h3>
+<p>Never call <code>optional.get()</code> without checking <code>isPresent()</code> first. Better yet, <b>never use <code>.get()</code> at all</b>. Always use <code>orElse</code> or <code>ifPresent</code> to maintain a clean functional flow.</p>
+</div>
+
+<hr/>
+</section>
+
+<section id="10-records">
+<h2>10. Records: Immutability by Default (Java 14+)</h2>
+
+<p>
+Before Java 14, to create a simple Data Carrier class, you had to write 50 lines of boilerplate (Getters, toString, etc) or use Lombok.
+</p>
+
+<div class="callout note">
+<h3>Record Magic</h3>
+<pre><code>public record UserDTO(Long id, String name, String email) {}</code></pre>
+<p>That's it. It's done. Java automatically generates Final fields, Constructor, Accessors (<code>id()</code>, <code>name()</code>), <code>equals()</code>, <code>hashCode()</code>, and <code>toString()</code>.</p>
+</div>
+
+<ul>
+  <li><b>Immutability:</b> You cannot change a record's fields after creation. This makes them perfectly <b>Thread-Safe</b>.</li>
+  <li><b>Use Case:</b> DTOs, API responses, Database rows.</li>
+</ul>
+
+<hr/>
+</section>
+
+<section id="11-sealed">
+<h2>11. Sealed Classes: Control Your Hierarchy (Java 17)</h2>
+
+<p>
+If you are building a secure library, you might not want "any" developer to extend your classes.
+</p>
+
+<pre><code>public sealed interface PaymentMethod permits CreditCard, UPI, PayPal {}</code></pre>
+
+<p>Only the classes listed in <code>permits</code> can implement <code>PaymentMethod</code>. This allows the compiler to know <b>every possible implementation</b>, which leads us to...</p>
+
+<hr/>
+</section>
+
+<section id="12-switch">
+<h2>12. Modern Switch Expressions</h2>
+
+<p>Switch is no longer a "clunky" statement from C. It is a powerful expression.</p>
+
+<div class="callout note">
+<h3>Old Switch vs New Switch</h3>
+<pre><code>// OLD: Fallthrough bugs, break everywhere
+int result;
+switch(day) {
+    case MONDAY: result = 1; break;
+    default: result = 0;
+}
+
+// NEW: No breaks, returns value directly
+int result = switch(day) {
+    case MONDAY -> 1;
+    case TUESDAY, WEDNESDAY -> 2;
+    default -> 0;
+};</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="13-pattern-matching">
+<h2>13. Pattern Matching (The "Safety Cast")</h2>
+
+<p>Stop doing <code>instanceof</code> then <code>(Casting)</code>. Do it all in one step.</p>
+
+<pre><code>if (obj instanceof String s) {
+    // s is now a String variable, automatically cast!
+    System.out.println(s.toLowerCase());
+}</code></pre>
+
+<h3>Combined with Switch (Java 21)</h3>
+<pre><code>return switch (obj) {
+    case String s -> s.length();
+    case Integer i -> i;
+    case List<?> l -> l.size();
+    default -> 0;
+};</code></pre>
+
+<hr/>
+</section>
+
+<section id="14-bonus">
+<h2>14. Small but Mighty: API Polish (Java 11-21)</h2>
+
+<p>Mastering these smaller additions shows you stay current with every minor release.</p>
+
+<h3>1. Sequenced Collections (Java 21)</h3>
+<p>Finally, a unified way to get the first and last elements of any collection.</p>
+<pre><code>LinkedHashSet&lt;String&gt; set = ...;
+set.getFirst(); // No more iterator().next()!
+set.getLast();
+set.addFirst("New Head");
+set.reversed(); // Returns a reversed view without copying data</code></pre>
+
+<h3>2. The String API (Java 11+)</h3>
+<pre><code>" ".isBlank();                // true (checks whitespace)
+"Line1\nLine2".lines();       // Stream of lines
+"Hi ".repeat(3);              // "Hi Hi Hi "
+"  text  ".strip();           // Unicode-aware trim()</code></pre>
+
+<h3>3. Parallel Streams: The Interview Trap</h3>
+<div class="callout warning">
+<h4>When NOT to use .parallelStream()</h4>
+<p>Beginners think it makes everything faster. Architects know it can kill performance. 
+<b>Avoid it if:</b>
+<ul>
+  <li>Your source is a <code>LinkedList</code> (hard to split).</li>
+  <li>You are doing I/O or Blocking calls (it blocks the common thread pool).</li>
+  <li>Your data set is small (&lt; 10,000 items). The overhead of splitting is higher than the gain.</li>
+</ul>
+</p>
+</div>
+
+<hr/>
+</section>
+
+<section id="15-text-blocks">
+<h2>15. Text Blocks & Var</h2>
+
+<h3>Text Blocks (Java 15+)</h3>
+<p>Writing JSON or SQL in Java used to be a nightmare of <code>\n" + "</code>. Now we use triple quotes.</p>
+<pre><code>String query = """
+    SELECT id, name
+    FROM users
+    WHERE role = 'ADMIN'
+    ORDER BY name DESC
+    """;</code></pre>
+
+<h3>Local Variable Type Inference (Java 10+)</h3>
+<p>Use <code>var</code> when the type is obvious. It makes code cleaner.</p>
+<pre><code>var list = new ArrayList&lt;String&gt;(); // Compiler knows it's ArrayList
+var user = database.find(id);         // Compiler knows it's User</code></pre>
+
+<hr/>
+</section>
+
+<section id="16-completablefuture">
+<h2>16. CompletableFuture: Async Mastering</h2>
+
+<p>Modern apps must not block. <code>CompletableFuture</code> represents a value that will arrive in the future.</p>
+
+<pre><code>CompletableFuture.supplyAsync(() -> userService.fetch(id))
+    .thenApply(User::toDTO)
+    .thenAccept(System.out::println)
+    .exceptionally(ex -> {
+        System.err.println("Failed!");
+        return null;
+    });</code></pre>
+
+<hr/>
+</section>
+
+<section id="17-virtual-threads">
+<h2>17. Virtual Threads: Project Loom (Java 21)</h2>
+
+<p>This is the most "Senior" topic in modern Java.</p>
+
+<h3>The Problem</h3>
+<p>For 25 years, 1 Java Thread = 1 Operating System Thread. OS threads use 1MB of memory and switching between them is slow. This limited Java to ~2,000 users per machine.</p>
+
+<h3>The Solution: Virtual Threads</h3>
+<p>Virtual Threads are "lightweight". They live on the <b>Heap</b> (like objects). You can start 1,000,000 virtual threads and the machine won't even sweat.</p>
+
+<div class="mermaid">
+graph TD
+    CarrierThread[Carrier OS Thread]
+    VT1[Virtual Thread 1 - Request A]
+    VT2[Virtual Thread 2 - Request B]
+    VT3[Virtual Thread 3 - Request C]
+    
+    VT1 --> CarrierThread
+    VT2 --> CarrierThread
+    VT3 --> CarrierThread
+</div>
+
+<div class="callout warning">
+<h3>Expert Tip: When NOT to use Virtual Threads</h3>
+<p>Virtual Threads are brilliant for <b>I/O-Bound</b> tasks (Database, API, File calls). However, they are **NOT** for <b>CPU-Bound</b> tasks (Video encoding, complex math, heavy encryption).</p>
+<ul>
+    <li><b>Reason:</b> If a thread is crunching numbers, it never "yields" to wait for data. It stays stuck on the CPU. Creating 1 million CPU-hungry threads will just overload your processor and make the app slower than using 4 standard threads.</li>
+</ul>
+</div>
+
+<p>When Virtual Thread 1 waits for a Database, it "unmounts" from the OS thread, letting Virtual Thread 2 take over. <b>Zero CPU time is wasted.</b></p>
+
+<hr/>
+</section>
+
+<section id="18-perf-gc">
+<h2>18. Performance & ZGC</h2>
+
+<p>Java 21 with the <b>Z Garbage Collector (ZGC)</b> can handle massive 1TB heaps with <b>Zero "Stop-the-world" pauses</b>. Previous versions of Java would freeze for 5-10 seconds to clean memory. ZGC does it in less than 1 millisecond.</p>
+
+<div class="callout note">
+<h3>How to enable ZGC</h3>
+<p>You don't need code changes, just a JVM flag when running your JAR:</p>
+<pre><code>java -XX:+UseZGC -XX:+ZGenerational -jar my-big-app.jar</code></pre>
+</div>
+
+<hr/>
+</section>
+
+<section id="19-interview">
+<h2>19. Modern Java Interview Masterclass (Easy to Hard)</h2>
+
+<p>This section covers common questions asked in interviews for Junior, Mid, and Senior positions.</p>
+
+<!-- TIER 1: JUNIOR / EASY -->
+<h3>Level 1: Junior & Foundation</h3>
+
+<div class="callout note">
+<h4>1. What is a Functional Interface? Give examples.</h4>
+<p><b>Answer:</b> An interface with exactly one abstract method. It can have multiple default or static methods. Examples: <code>Runnable</code> (run), <code>Comparator</code> (compare), and the built-in <code>Predicate</code>, <code>Function</code>, <code>Consumer</code>.</p>
+</div>
+
+<div class="callout note">
+<h4>2. What is the difference between a Collection and a Stream?</h4>
+<p><b>Answer:</b> 
+    <ul>
+        <li><b>Collection:</b> An in-memory data structure that holds all its values. You can add/remove items.</li>
+        <li><b>Stream:</b> A fixed-sequence view of data that doesn't store anything. It processes data on-the-fly.</li>
+    </ul>
+</p>
+</div>
+
+<div class="callout note">
+<h4>3. What is the use of the <code>Optional</code> class?</h4>
+<p><b>Answer:</b> It's a container used to represent a value that might be <code>null</code>. It forces you to handle the empty case explicitly, reducing the risk of <code>NullPointerExceptions</code>.</p>
+</div>
+
+<!-- TIER 2: INTERMEDIATE / MID-LEVEL -->
+<h3>Level 2: Intermediate & Practical</h3>
+
+<div class="callout warning">
+<h4>4. Explain the difference between <code>map()</code> and <code>flatMap()</code>.</h4>
+<p><b>Answer:</b> 
+    <ul>
+        <li><b>map:</b> 1-to-1 mapping. (Transforming a User to their Email String).</li>
+        <li><b>flatMap:</b> 1-to-Many mapping + Flattening. If you have <code>List&lt;List&lt;String&gt;&gt;</code>, flatMap converts it into a single <code>Stream&lt;String&gt;</code>.</li>
+    </ul>
+</p>
+</div>
+
+<div class="callout warning">
+<h4>5. How is <code>orElse()</code> different from <code>orElseGet()</code>?</h4>
+<p><b>Answer:</b> 
+    <ul>
+        <li><b><code>orElse(value)</code>:</b> The value inside is created <b>even if the Optional is NOT empty</b>. (Can be wasteful).</li>
+        <li><b><code>orElseGet(Supplier)</code>:</b> The supplier is only called <b>if the Optional is empty</b>. (More efficient for heavy objects).</li>
+    </ul>
+</p>
+</div>
+
+<div class="callout warning">
+<h4>6. What are "Effectively Final" variables in Lambdas?</h4>
+<p><b>Answer:</b> A variable that is not declared <code>final</code> but whose value never changes after it is initialized. Lambdas can only access local variables that are effectively final to ensure thread-safety.</p>
+</div>
+
+<!-- TIER 3: ADVANCED / SENIOR -->
+<h3>Level 3: Advanced & Architectural</h3>
+
+<div class="callout note">
+<h4>7. Why shouldn't you use <code>Optional</code> for class fields or method parameters?</h4>
+<p><b>Answer:</b> It is not <code>Serializable</code>. Storing it in fields can break session persistence. For parameters, it makes method overloading messy—it's better to just check for null or overload the method.</p>
+</div>
+
+<div class="callout note">
+<h4>8. How do Virtual Threads improve performance over Platform Threads?</h4>
+<p><b>Answer:</b> Platform threads are tied 1:1 to OS threads, which are heavy (1MB memory). Virtual threads live on the JVM heap and are multiplexed onto a few OS threads. When a Virtual Thread hits a blocking I/O (like DB call), it "yields" the OS thread so others can use it, maximizing CPU usage.</p>
+</div>
+
+<div class="callout note">
+<h4>9. What is <code>invokedynamic</code> and how does it relate to Lambdas?</h4>
+<p><b>Answer:</b> <code>invokedynamic</code> is a JVM instruction that allows the dynamic linking of code at runtime. Instead of creating a new class for every lambda (like anonymous classes do), Java uses <code>invokedynamic</code> to generate a call site that points to a private method containing the lambda logic, making it faster and memory-efficient.</p>
+</div>
+
+<div class="callout note">
+<h4>10. What are the dangers of <code>parallelStream()</code>?</h4>
+<p><b>Answer:</b> It uses a shared <code>ForkJoinPool.commonPool()</code>. If one parallel stream performs a slow/blocking operation, it can block all other parallel streams in the entire application. It also has overhead that makes it slower for small collections.</p>
+</div>
+
+</section>
+
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const toggleTheme = () => {
+      const html = document.documentElement;
+      const t = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', t);
+    };
+
+    const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
+
+    const mainContent = document.getElementById('main-content');
+    const progressBar = document.getElementById('progress-bar');
+    
+    mainContent.onscroll = () => {
+      const winScroll = mainContent.scrollTop;
+      const height = mainContent.scrollHeight - mainContent.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      progressBar.style.width = scrolled + "%";
+    };
+
+    const searchBar = document.getElementById('search-bar');
+    const searchInput = document.getElementById('search');
+    
+    const toggleSearch = (show) => {
+      searchBar.classList.toggle('active', show);
+      if (show) searchInput.focus();
+    };
+
+    searchInput.oninput = () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll('section').forEach(s => {
+        s.classList.toggle('hidden', !s.innerText.toLowerCase().includes(q));
+      });
+    };
+
+    const downloadPDF = () => {
+      window.print();
+    };
+  </script>
+</body>
+</html>
